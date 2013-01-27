@@ -1,0 +1,506 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<title>Gantticc Test Drive</title>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" >
+	<meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1.0">
+	<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap-datepicker.js"></script>
+	<script type="text/javascript" src="js/gantticc.js"></script>
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/datepicker.css">
+</head>
+
+<style>
+body {
+font-family: Helvetica, Arial;
+font-size: 14px;
+}
+body .container-fluid {
+margin: 0;
+padding: 0;
+}
+.swatch_block {
+display: inline-block;
+width: 28px;
+height: 16px;
+margin-left: 2px;
+cursor: pointer;
+border: 1px solid #ccc;
+}
+.swatch_sel {
+border: 1px solid #333;
+}
+.swatch_null {
+background: #fff;
+}
+.swatch_gray {
+background: #e5e5e5;
+}
+.swatch_blue {
+background: #bee1ef;
+}
+.swatch_orange {
+background: #ff944d;
+}
+#task_form {
+display: none;
+position: absolute;
+background: #eee;
+padding: 0 10px 10px 10px;
+z-index: 10;
+border: 1px solid #bbb;
+border-radius: 4px;
+-webkit-box-shadow: 0 0 5px #aaa;
+box-shadow: 0 0 5px #aaa;
+}
+#task_form .close {
+display: inline-block;
+float: right;
+cursor: pointer;
+}
+#mselects {
+position: absolute;
+z-index: 1000;
+display: none;
+min-width: 160px;
+padding: 5px 0;
+margin: 30px 0 0 0;
+list-style: none;
+background-color: #ffffff;
+border: 1px solid #ccc;
+border: 1px solid rgba(0, 0, 0, 0.2);
+*border-right-width: 2px;
+*border-bottom-width: 2px;
+-webkit-border-radius: 6px;
+-moz-border-radius: 6px;
+border-radius: 6px;
+-webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+-moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+-webkit-background-clip: padding-box;
+-moz-background-clip: padding;
+background-clip: padding-box;
+}
+#mselects li > a {
+display: block;
+padding: 3px 20px;
+clear: both;
+font-weight: normal;
+line-height: 20px;
+color: #333333;
+white-space: nowrap;
+}
+#mselects li > a:hover,
+#mselects li > a:focus {
+text-decoration: none;
+color: #ffffff;
+background-color: #0081c2;
+background-image: -moz-linear-gradient(top, #0088cc, #0077b3);
+background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0088cc), to(#0077b3));
+background-image: -webkit-linear-gradient(top, #0088cc, #0077b3);
+background-image: -o-linear-gradient(top, #0088cc, #0077b3);
+background-image: linear-gradient(to bottom, #0088cc, #0077b3);
+background-repeat: repeat-x;
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff0088cc', endColorstr='#ff0077b3', GradientType=0);
+}
+#mselects .disabled > a,
+#mselects .disabled > a:hover {
+color: #999999;
+}
+#mselects .disabled > a:hover {
+text-decoration: none;
+background-color: transparent;
+background-image: none;
+filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+cursor: default;
+}
+</style>
+
+<body>
+<div class="container-fluid">
+<div id="controls" class="row-fluid">
+	<div class="row-fluid"><div class="span12 form-inline" style="padding:10px 10px 0 10px;">
+		<label>Project: </label>
+		<input type="text" id="project_title_txtfield" value="" />
+		<label>Start: </label>
+		<input type="text" class="input-small datepickr" id="project_startdate" value="" size="12" />
+		<label>End: </label>
+		<input type="text" class="input-small datepickr" id="project_enddate" value="" size="12" />
+		<button class="btn" onclick="project_entry_submit();">Update</button>
+		<button class="btn" onclick="delete_everything();">Delete</button>
+	</div></div>
+	<div class="row-fluid" style="padding:10px 0 5px 0;">
+		<div class="span3" style="padding:5px 0 0 10px;">
+			<span onclick="set_swatch_color('null');" class="swatch_block swatch_null swatch_sel"></span>
+			<span onclick="set_swatch_color('gray');" class="swatch_block swatch_gray"></span>
+			<span onclick="set_swatch_color('blue');" class="swatch_block swatch_blue"></span>
+			<span onclick="set_swatch_color('orange');" class="swatch_block swatch_orange"></span>
+		</div>
+		<div class="span6" style="text-align:center;">
+			<button class="btn" onclick="gchart_jump('left');">
+				<span class="icon-arrow-left"></span>
+			</button>
+			<button id="mtab" class="btn" href="#" value="" data-placement="bottom" data-original-title="Jump to"></button>
+			<button class="btn" onclick="gchart_jump('right');">
+				<span class="icon-arrow-right"></span>
+			</button>
+		</div>
+		<div class="span3" style="padding:0 10px 0 0;text-align:right;">
+			<div class="btn-group">
+				<button class="btn" onclick="set_scale('day');">Day</button>
+				<button class="btn" onclick="set_scale('week');">Week</button>
+			</div>
+		</div>
+		<ul id="mselects"></ul>
+	</div>
+</div>
+<div class="row-fluid">
+	<div id="gantt" style="height:500px;z-index:1;"></div>
+</div>
+<div id="task_form">
+	<div style="width:100%;padding:0 5px 3px 0;">
+		<span class="close" onclick="task_form_cancel();">&times;</span>
+	</div>
+	<input type="hidden" id="title_tid" value="" />
+	<input type="text" id="title_txtfield" value="" /><br/>
+	<input type="hidden" id="task_color" value="" />
+	<div style="width:100%;margin:0 0 5px 0;">
+		<span id="task_color_gray" onclick="task_form_set_color('gray')" class="swatch_block swatch_gray"></span>
+		<span id="task_color_blue" onclick="task_form_set_color('blue')" class="swatch_block swatch_blue"></span>
+		<span id="task_color_orange" onclick="task_form_set_color('orange')" class="swatch_block swatch_orange"></span>
+	</div>
+	<textarea rows="4" cols="18" id="notes_txtfield"></textarea><br/>
+	<button class="btn" onclick="task_form_submit();">Save</button>
+	<button class="btn" style="float:right;" onclick="task_form_delete();"><span class="icon-trash"></span></button>
+</div>
+</div>
+</body>
+
+<script type="text/javascript" src="js/bonsai.min.js"></script>
+<script type="text/javascript">
+	$(function() {
+		// Entry point
+		$(".datepickr").datepicker();
+		$(".datepickr").on('changeDate', function(e){
+			$(e.target).datepicker('hide');
+		})
+		init_project();
+		
+		// setup jump-to-month dropdown
+		$('#mtab').on('click', function(){
+			var x = $('#mtab').offset().left;
+			var y = $('#mtab').offset().top;
+			$('#mselects').css('left', x);
+			$('#mselects').show();
+		});
+		$(document).bind('mouseup touchstart', function(e){
+		    var container = $('#mselects');
+			if (!container.is(e.target) && container.has(e.target).length === 0) {
+				container.hide();
+			}
+		});
+    });
+	
+	var gchart = bonsai.run(document.getElementById('gantt'), {
+		url: 'js/gchart.js?bustcache='+Math.random(),
+		width: $('#controls').width(),
+		height: 500,
+		code: function() {
+			stage.on('message:update_task', function(data){
+				if (data.cancel === 'true') {
+					ganttClickLock = 0;
+					return;
+				}
+				var task = null;
+				// find task by task id
+				var i = 0;
+				for (i; i < gantticc.tasks.length; i++) {
+					task = gantticc.tasks[i];
+					if (task.tid == data.tid) break;
+				}
+				if (task == null) {
+					return;
+				}
+				if (data.delete === 'true') {
+					gchart.deleteTaskAnim(task.group_asset);
+					gantticc.tasks.splice(i, 1);
+				} else {
+					data.title = data.title;
+					task.title_asset.attr('text', data.title);
+					task.updateIndicatorIcon(data.notes);
+					task.updateTaskColor(data.color);
+				}
+				ganttClickLock = 0;
+			});
+			stage.on('message:update_project', function(data){
+				if ((typeof data.start_date) != 'undefined') {
+					// redraw header with new dates
+					gchart.drawHeader(data.start_date, data.end_date);
+					// scroll to today
+					gchart.scrollToDate(new Date());
+					gchart.updateCurrentUnit();
+				}
+			});
+			stage.on('message:init_tasks', function(data){
+				gchart.initTasks(data.tasks);
+				gchart.scrollToDate(new Date());
+			});
+			stage.on('message:scroll_to_date', function(data){
+				var date = new Date(data.date);
+				gchart.scrollToDate(date);
+			});
+			stage.on('message:set_swatch', function(data){
+				gchart.highlightTaskByColor(data.color);
+			});
+			stage.on('message:set_scale', function(data){
+				if (gchart.unit === data.unit) {
+					// jump to today if no change
+					var date = new Date();
+					gchart.scrollToDate(date);
+				}
+				// preserve current scroll position
+				var scrollDate = gchart.getScrollDate();
+				gchart.unit = data.unit;
+				gchart.drawHeader(data.start_date, data.end_date);
+				gchart.updateCurrentUnit(1);
+				gchart.scrollToDate(scrollDate);
+			});
+			stage.sendMessage('ready', {});
+		}
+	});
+	
+	gchart.on('load', function(data) {
+		gchart.on('message:ready', function(data) {
+			// send the dates to gchart
+			var startdate = new Date($('#project_startdate').val()).toISOString();
+			var enddate = new Date($('#project_enddate').val()).toISOString();
+			gchart.sendMessage('update_project', {
+				start_date: startdate,
+				end_date: enddate
+			});
+			// send tasks to gchart
+			get_tasks();
+			gchart.sendMessage('init_tasks', {
+				tasks: gntasks
+			});
+		});
+		gchart.on('message:edit_task', function(data) {
+			var task;
+			for (var i=0; i<gntasks.length; i++) {
+				task = gntasks[i];
+				if (task.tid == data.tid) break;
+			}
+			// show the title edit form
+			$('#title_tid').val(task.tid);
+			$('#title_txtfield').val(task.title);
+			if (!task.color) task.color = "gray";
+			$('#task_color').val(task.color);
+			for (var i=0; i<gncolors.length; i++) {
+				var c = gncolors[i];
+				$('#task_color_'+c).removeClass('swatch_sel');
+			}
+			$('#task_color_'+task.color).addClass('swatch_sel');
+			$('#notes_txtfield').val(task.notes);
+			$('#task_form').css('top', data.y+$('#controls').height()+2);
+			$('#task_form').css('left', data.x);
+			$('#task_form').show();
+		});
+		gchart.on('message:update_task', function(data) {
+			var task;
+			for (var i=0; i<gntasks.length; i++) {
+				task = gntasks[i];
+				if (task.tid == data.tid) break;
+			}
+			if (data.start) task.start = data.start;
+			if (data.end) task.end = data.end;
+			if (data.row) task.row = data.row;
+			save_tasks();
+		});
+		gchart.on('message:new_task', function(data) {
+			gntasks.push(data.task);
+			save_tasks();
+		});
+		gchart.on('message:scroll_date', function(data) {
+			var cur = new Date(data.date);
+			$('#mtab').text( getLiteralMonth([cur.getMonth()]) );
+			$('#mtab').attr('value', cur.toISOString());
+		})
+	});
+	
+	function init_project() {
+		init_env();
+		update_mtab();
+		get_project();
+	}
+	
+	function task_form_delete() {
+		gchart.sendMessage('update_task', {
+			tid: $('#title_tid').val(),
+			delete: 'true'
+		});
+		$('#task_form').hide();
+		delete_task($('#title_tid').val());
+	}
+	
+	function task_form_cancel() {
+		gchart.sendMessage('update_task', {
+			tid: $('#title_tid').val(),
+			cancel: 'true'
+		});
+		$('#task_form').hide();
+	}
+	
+	function task_form_submit() {
+		var task;
+		var tid = $('#title_tid').val();
+		for (var i=0; i<gntasks.length; i++) {
+			task = gntasks[i];
+			if (task.tid == tid) break;
+		}
+		task.title = $('#title_txtfield').val();
+		task.color = $('#task_color').val();
+		task.notes = $('#notes_txtfield').val();
+		gchart.sendMessage('update_task', {
+			tid: tid,
+			title: task.title,
+			color: task.color,
+			notes: task.notes
+		});
+		$('#task_form').hide();
+		save_tasks();
+	}
+	
+	function task_form_set_color(color) {
+		for (var i=0; i<gncolors.length; i++) {
+			var c = gncolors[i];
+			$('#task_color_'+c).removeClass('swatch_sel');
+		}
+		$('#task_color_'+color).addClass('swatch_sel');
+		$('#task_color').val(color);
+	}
+	
+	function project_entry_submit() {
+		var startdate = new Date($('#project_startdate').val()).toISOString();
+		var enddate = new Date($('#project_enddate').val()).toISOString();
+		gchart.sendMessage('update_project', {
+			start_date: startdate,
+			end_date: enddate
+		});
+		gnproject.title = $('#project_title_txtfield').val();
+		gnproject.start = startdate;
+		gnproject.end = enddate;
+		save_project();
+		// make sure mtab is within scale
+		var current = new Date($('#mtab').attr('value'));
+		var to = current;
+		if (current < new Date($('#project_startdate').val())) {
+			to = new Date($('#project_startdate').val());
+			gchart_scroll(to);
+		}
+		else if (current > new Date($('#project_enddate').val())) {
+			to = new Date($('#project_enddate').val());
+			gchart_scroll(to);
+		}
+		$('#mtab').text( getLiteralMonth(to.getMonth()) );
+		$('#mtab').attr('value', to.toISOString());
+		// generate a list of months to jump to directly
+		var months = [];
+		var start = new Date($('#project_startdate').val());
+		var end = new Date($('#project_enddate').val());
+		for (var y=start.getFullYear(); y<=end.getFullYear(); y++) {
+			if (y != start.getFullYear()) {
+				months.push("<li class=\"disabled\">"+"<a>"+y+"</a></li>");
+			}
+			var endMonth = (y == end.getFullYear()) ? end.getMonth() : 11;
+			var startMonth = (y == start.getFullYear()) ? start.getMonth() : 0;
+			for (var m=startMonth; m <= endMonth; m++) {
+				var startDay = (months.length > 0) ? 1 : start.getDate();
+				var btn = "<li><a href=\"#\" onclick=\"gchart_scroll(new Date("+y+","+m+","+startDay+"))\">";
+				btn += getLiteralMonth(m)+"</a></li>";
+				months.push(btn);
+			}
+		}
+		$('#mselects').html( months.join('') );
+	}
+	
+	function gchart_jump(dir) {
+		var current = new Date($('#mtab').attr('value'));
+		var y = current.getFullYear();
+		var m = current.getMonth();
+		var d = 1;
+		if (dir === "left") {
+			m--;
+			if (m < 0) {
+				y--;
+				m = 11;
+			}
+		} else if (dir === "right") {
+			m++;
+			if (m == 12) {
+				y++;
+				m = 0;
+			}
+		}
+		var to = new Date(y,m,1);
+		var start = new Date($('#project_startdate').val());
+		var end = new Date($('#project_enddate').val());
+		if (to > end) return;
+		if (to < start) {
+			// jump to first day of project
+			to = start;
+		}
+		gchart_scroll(to);
+		$('#mtab').text( getLiteralMonth(to.getMonth()) );
+		$('#mtab').attr('value', to.toISOString());
+	}
+	
+	function gchart_scroll(date) {
+		gchart.sendMessage('scroll_to_date', {
+			date: date.toISOString()
+		});
+		$('#mtab').text( getLiteralMonth(date.getMonth()) );
+		$('#mtab').attr('value', date.toISOString());
+		$('#mselects').hide();
+	}
+	
+	function delete_everything() {
+		gnproject = { };
+		gntasks.length = 0;
+		localStorage.removeItem('project');
+		localStorage.removeItem('tasks');
+		get_tasks();
+		get_project();
+		gchart.sendMessage('init_tasks', {
+			tasks: gntasks
+		});
+	}
+
+	function set_scale(unit) {
+		var startdate = new Date($('#project_startdate').val()).toISOString();
+		var enddate = new Date($('#project_enddate').val()).toISOString();
+		// just send message
+		gchart.sendMessage('set_scale', {
+			unit: unit,
+			start_date: startdate,
+			end_date: enddate
+		});
+		update_mtab();
+	}
+	
+	function set_swatch_color(color) {
+		for (var i=0; i<gncolors.length; i++) {
+			var c = gncolors[i];
+			$('.swatch_'+c).removeClass('swatch_sel');
+		}
+		$('.swatch_'+color).addClass('swatch_sel');
+		gchart.sendMessage('set_swatch', {
+			color: color
+		});
+	}
+	
+</script>
+
+</html>
