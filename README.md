@@ -7,3 +7,7 @@ This is a minimalistic gantt chart web app. Rendered with [bonsai](http://bonsai
 This is still under development, use at your own risk.
 
 To use it, just run `test.html` locally in your favorite browser (it uses HTML5 local storage), no need for a web server.
+
+#### Preview
+
+[Screenshot](http://pasteboard.co/2EcljrBp.jpg)
