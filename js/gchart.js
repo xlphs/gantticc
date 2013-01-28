@@ -703,11 +703,12 @@ Gantt.prototype = {
 	scrollCheck: function() {
 		// make sure scroll is within boundries
 		var max = GANTT_UNIT_INDT_LEN;
-		if (this.x > max) this.x = max;
 		if (this.width-stage.width < 0) {
 			this.x = GANTT_UNIT_INDT_LEN;
 		} else {
-			if (Math.abs(this.x) > (this.width-stage.width)) {
+			if (this.x > max) {
+				this.x = max;
+			} else if (Math.abs(this.x) > (this.width-stage.width)) {
 				this.x = -1*(this.width-stage.width);
 			}
 		}

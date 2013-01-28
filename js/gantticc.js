@@ -85,3 +85,20 @@ function getLiteralMonth(m) {
 				 "August", "September", "October", "November", "December"];
 	return mnames[m];
 }
+
+function export_data(type) {
+	if (type === "google_cal") {
+		var csv = [];
+		csv.push("Subject,Start Date,End Date,Description"); // headers
+		for (var i=0; i<gntasks.length; i++) {
+			var t = gntasks[i];
+			var startDate = t.start.split("T")[0];
+			startDate.split("-").join("/");
+			var endDate = t.end.split("T")[0];
+			endDate.split("-").join("/");
+			csv.push(t.title+","+startDate+","+endDate+","+t.notes);
+		}
+		return csv.join("\n");
+	}
+	return "";
+}
