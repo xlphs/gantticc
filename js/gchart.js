@@ -583,18 +583,25 @@ Gantt.prototype = {
 		}
 		else if (this.unit === "week") {
 			var tmpDate = null;
+			var weekCount = 0;
 			for (var y=start.getFullYear(); y<=end.getFullYear(); y++) {
 				var endMonth = (y == end.getFullYear()) ? end.getMonth() : 11;
 				var startMonth = (y == start.getFullYear()) ? start.getMonth() : 0;
 				for (var m=startMonth; m <= endMonth; m++) {
 					var endDay = (m == end.getMonth()) ? end.getDate() : end.getDaysInMonth(y, m);
-					var startDay = (daycount > 0) ? 1 : start.getDate();
-					for (var d=startDay; ; ) {
+					var startDay = (weekCount > 0) ? 1 : start.getDate();
+					for (var d=startDay; d < endDay; ) {
 						var inc = 7;
 						var day = new Date(y,m,d);
-						// this day is the first or last week of the month
-						if (d == startDay) {
-							// go to next Monday
+						// last week of the month
+						if ( (day.getDaysInMonth(y, m) - d) < 6) {
+							inc = -1; // do not render
+							tmpDate = new Date(y, m, d); // next week starts here
+							weekCount++;
+						}
+						// other weeks of the month
+						else {
+							// calculate increment to next Monday
 							if (day.getDay() != 1) {
 								var diff = 8 - day.getDay();
 								if (diff == 8) diff = 1;
@@ -605,9 +612,6 @@ Gantt.prototype = {
 								day = tmpDate;
 								tmpDate = null;
 							}
-						} else if ( (endDay - d) < 6) {
-							inc = -1; // do not render
-							tmpDate = new Date(y, m, d); // next week starts here
 						}
 						if (inc < 0) break;
 						// draw vertical grid line
@@ -626,6 +630,8 @@ Gantt.prototype = {
 						gantticc.dates.push(dateBlk);
 						date_x += GANTT_DAY_BLK_LEN;
 						daycount++;
+						weekCount++;
+						//console.log(day+" is week number "+w);
 						if (inc == 0) break;
 						d += inc;
 					}
@@ -635,7 +641,9 @@ Gantt.prototype = {
 		
 		// draw the last vertical line
 		var lastline = new Rect(date_x-1, 0, 1, stage.height).addTo(this.bg);
+		var lastline2 = new Rect(date_x-1, 0, 1, GANTT_TASK_BLK_HGT-1).addTo(this.header);
 		lastline.fill('#eee');
+		lastline2.fill('#eee');
 		// highlight today or current week
 		var today = new Date();
 		var today_x = TaskBlock.prototype.calculateXFromDate(today);

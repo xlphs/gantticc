@@ -29,7 +29,7 @@ function get_project() {
 			title: "My Awesome Project",
 			color: "blue",
 			start: new Date().toISOString(),
-			end: new Date(new Date().getTime() + 1000*3600*24*28).toISOString()
+			end: new Date(new Date().getTime() + 1000*3600*24*49).toISOString()
 		};
 	}
 	$('#project_title_txtfield').val(gnproject.title);
