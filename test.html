@@ -232,7 +232,7 @@ cursor: default;
 		$('#project_info_modal').on('show', function(){
 			var html = [];
 			html.push("<p>Number of tasks: "+gntasks.length+"</p>");
-			html.push("<p>CSV data:</p>");
+			html.push("<p>CSV data can be imported into other apps such as Google Calendar. Just copy and paste the text below and save as a .csv file.</p>");
 			html.push("<textarea class=\"span6\" rows=\"5\">"+export_data("google_cal")+"</textarea>");
 			$('#project_info').html(html.join(""));
 		});

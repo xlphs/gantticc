@@ -80,6 +80,7 @@ function TaskBlock(context, x, task) {
 		this.notes = "show";
 	}
 	this.color = (task.color) ? task.color : "gray";
+	this.extended = false;
 	this.show(context);
 }
 
@@ -109,6 +110,10 @@ TaskBlock.prototype = {
 		group.on('mouseover', function(e) {
 			var c = gantticc[_task.color][1];
 			_task.bg_asset.fill(color.parse(c));
+			// check if title bg should be extended
+			//if (_task.extended == false && _task.title.length*10 > _task.bg_asset.attr('width')) {
+				//console.log(_task.title.length);
+			//}
 			_task.edgeDrag_asset.attr({opacity: 1});
 		})
 		.on('mouseout', function(e) {
@@ -124,10 +129,10 @@ TaskBlock.prototype = {
 		});
 		
 		var title_x = 8;
-		var title_y = 9;
+		var title_y = 10;
 		
 		if (_task.notes) {
-			_task.addIndicatorIcon(group, 'assets/push_pin_16.png', 5, 6, 16, 16);
+			_task.addIndicatorIcon(group, 'assets/task_list_16.png', 5, 7, 16, 16);
 			title_x += 16;
 		}
 		
@@ -182,7 +187,7 @@ TaskBlock.prototype = {
 		if (notes.length > 0) {
 			// show/add icon, shift title right
 			if ( (typeof _task.indicator_asset) == 'undefined') {
-				_task.addIndicatorIcon(_task.group_asset, 'assets/push_pin_16.png', 5, 6, 16, 16);
+				_task.addIndicatorIcon(_task.group_asset, 'assets/task_list_16.png', 5, 7, 16, 16);
 			} else {
 				_task.indicator_asset.attr({ visible: true });
 			}
