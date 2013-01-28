@@ -573,7 +573,7 @@ Gantt.prototype = {
 						// draw the date, add to header
 						var tmp = new Date(y,m,d);
 						var dateBlk = new DateBlock(this.header, date_x, date_y, tmp, d.toString());
-						if (tmp.getDay() > 4) dateBlk.setColor(gantticc.header_color[1]);
+						if (tmp.getDay() == 0 || tmp.getDay() == 6) dateBlk.setColor(gantticc.header_color[1]);
 						gantticc.dates.push(dateBlk);
 						date_x += GANTT_DAY_BLK_LEN;
 						daycount++;
