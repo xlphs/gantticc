@@ -14,6 +14,7 @@ var gantticc = {
 	dates: [], // DateBlocks
 	tasks: [], // TaskBlocks
 	// predefined colors and their highlights
+	header_color: ["#19629b", "#3f9ccb"],
 	gray: ["#e5e5e5", "#f2f2f2"],
 	blue: ["#bee1ef", "#d4effc"],
 	orange: ["#ff944d", "#ffa264"]
@@ -44,7 +45,7 @@ DateBlock.prototype = {
 		_dateblk.textAsset.attr({
 			x: _dateblk.x+nudge,
 			y: _dateblk.y,
-			textFillColor: color.parse('#99000B'),
+			textFillColor: color.parse(gantticc.header_color[0]),
 			fontFamily: 'Helvetica',
 			fontSize: '20px'
 		});
@@ -281,7 +282,7 @@ function Gantt(x, y) {
 	this.unitIndicator = new Text( today.getLiteralMonth(today.getMonth()) ).addTo(unitIndicatorGrp);
 	this.unitIndicator.attr({
 		x: 3, y: 5,
-		textFillColor: color.parse('#99000B'),
+		textFillColor: color.parse(gantticc.header_color[0]),
 		fontFamily: 'Helvetica', fontSize: '20px'
 	});
 	
@@ -559,12 +560,12 @@ Gantt.prototype = {
 					var startDay = (daycount > 0) ? 1 : start.getDate();
 					for (var d=startDay; d <= endDay; d++) {
 						// draw vertical grid line
-						var line = new Rect(date_x, 0, 1, GANTT_TASK_BLK_HGT).addTo(this.header);
+						var line = new Rect(date_x, 0, 1, GANTT_TASK_BLK_HGT-1).addTo(this.header);
 						var line2 = new Rect(date_x, 0, 1, stage.height).addTo(this.bg);
 						// darker line for first day of a month
 						if (d == 1) {
-							line.fill('#99000b');
-							line2.fill('#99000b');
+							line.fill(gantticc.header_color[0]);
+							line2.fill(gantticc.header_color[0]);
 						} else {
 							line.fill('#eee');
 							line2.fill('#eee');
@@ -572,7 +573,7 @@ Gantt.prototype = {
 						// draw the date, add to header
 						var tmp = new Date(y,m,d);
 						var dateBlk = new DateBlock(this.header, date_x, date_y, tmp, d.toString());
-						if (tmp.getDay() > 4) dateBlk.setColor('#c35f5a');
+						if (tmp.getDay() > 4) dateBlk.setColor(gantticc.header_color[1]);
 						gantticc.dates.push(dateBlk);
 						date_x += GANTT_DAY_BLK_LEN;
 						daycount++;
@@ -610,12 +611,12 @@ Gantt.prototype = {
 						}
 						if (inc < 0) break;
 						// draw vertical grid line
-						var line = new Rect(date_x, 0, 1, GANTT_TASK_BLK_HGT).addTo(this.header);
+						var line = new Rect(date_x, 0, 1, GANTT_TASK_BLK_HGT-1).addTo(this.header);
 						var line2 = new Rect(date_x, 0, 1, stage.height).addTo(this.bg);
 						// darker line for end of a month
 						if (d == 1) {
-							line.fill('#99000b');
-							line2.fill('#99000b');
+							line.fill(gantticc.header_color[0]);
+							line2.fill(gantticc.header_color[0]);
 						} else {
 							line.fill('#eee');
 							line2.fill('#eee');
