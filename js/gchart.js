@@ -6,6 +6,11 @@ var GANTT_TASK_BLK_HGT = 30;
 var GANTT_UNIT_INDT_LEN = 43;
 // length of task detail popup (in px)
 var TASK_POPUP_LEN = 250;
+// detect iPhone and iPad
+var IOS_USER = false;
+if ( (navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPad/i)) ) {
+	IOS_USER = true;
+}
 
 // the top level global context
 var ganttContext = new Group().addTo(stage);
@@ -130,7 +135,7 @@ TaskBlock.prototype = {
 		});
 		
 		var title_x = 8;
-		var title_y = 10;
+		var title_y = (IOS_USER) ? 8 : 10;
 		
 		if (_task.notes) {
 			_task.addIndicatorIcon(group, 'assets/task_list_16.png', 5, 7, 16, 16);

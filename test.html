@@ -87,7 +87,7 @@ width:16px;
 }
 .swatch_block{
 display:inline-block;
-width:28px;
+width:22px;
 height:16px;
 margin-left:2px;
 cursor:pointer;
@@ -212,7 +212,7 @@ cursor:default;
 				<span class="icon-adjust"></span>
 				<b class="caret"></b>
 			</a>
-			<ul class="dropdown-menu" role="menu" aria-labelledby="task_color_sel_menu">
+			<ul class="dropdown-menu" style="min-width:66px;" role="menu" aria-labelledby="task_color_sel_menu">
 				<li><a tabindex="-1" onclick="set_swatch_color('null');" href="#"><span class="swatch_block swatch_null swatch_sel"></span></a></li>
 				<li class="divider"></li>
 				<li><a tabindex="-1" onclick="set_swatch_color('gray');" href="#"><span class="swatch_block swatch_gray"></span></a></li>
@@ -304,7 +304,8 @@ cursor:default;
 <script type="text/javascript" src="js/bonsai.min.js"></script>
 <script type="text/javascript">
 	$(function(){
-		// Entry point
+		// ---- Entry point ----
+		// setup date picker
 		$(".datepickr").datepicker();
 		$(".datepickr").on('click', function(e){
 			$(e.target).datepicker('show');
@@ -312,8 +313,8 @@ cursor:default;
 		$(".datepickr").on('changeDate', function(e){
 			$(e.target).datepicker('hide');
 		})
+		// load data
 		init_project();
-		
 		// setup jump-to-month dropdown
 		$('#mtab').on('click', function(){
 			var x = $('#mtab').offset().left;
@@ -333,7 +334,7 @@ cursor:default;
 				}
 			});
 		});
-		
+		// setup project info model
 		$('#project_info_modal').on('show', function(){
 			var html = [];
 			html.push("<p>Number of tasks: "+gntasks.length+"</p>");
@@ -341,7 +342,6 @@ cursor:default;
 			html.push("<textarea class=\"span6\" rows=\"5\">"+export_data("google_cal")+"</textarea>");
 			$('#project_info').html(html.join(""));
 		});
-		
 		if ( $('#topbar').height() > 44) {
 			// hide not-so-useful icons for small screen size
 			$('.hideme').each(function(){
@@ -670,7 +670,7 @@ cursor:default;
 			$('#settings_toggler').removeClass("icon-arrow-up");
 			$('#settings').slideUp();
 		}
-	}	
+	}
 </script>
 
 </html>
