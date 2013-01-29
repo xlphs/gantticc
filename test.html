@@ -33,7 +33,6 @@ text-shadow:0 1px 0 #ffffff;
 }
 .topbar-inner{
 min-height:40px;
-padding:0 10px;
 background-color:#fafafa;
 background-image:-moz-linear-gradient(top, #ffffff, #f2f2f2);
 background-image:-webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#f2f2f2));
@@ -81,6 +80,10 @@ display:inline-block;
 float:right;
 cursor:pointer;
 padding:2px 0 3px 0;
+}
+.topbar-inner .swatch_block{
+margin-top:4px;
+width:16px;
 }
 .swatch_block{
 display:inline-block;
@@ -186,12 +189,13 @@ cursor:default;
 	</div></div>
 </div>
 <div id="topbar" class="row-fluid"><div class="topbar-inner">
-	<div class="span3">
-		<a class="btn" href="#gantticc_help_modal" role="button" data-toggle="modal">
-			<span class="icon-question-sign"></span>
-		</a>
+	<div class="span4">
+		<div style="padding-left:10px;">
+		<a class="btn" onclick="toggle_settings();" href="#">
+			<span id="settings_toggler" class="icon-arrow-down"></span>
+		</a></div>
 	</div>
-	<div class="span6" style="text-align:center;"><div>
+	<div class="span4" id="topbar-center" style="text-align:center;"><div>
 		<button class="btn" onclick="gchart_jump('left');">
 			<span class="icon-arrow-left"></span>
 		</button>
@@ -201,8 +205,9 @@ cursor:default;
 		</button>
 		<ul id="mselects"></ul>
 	</div></div>
-	<div class="span3" style="text-align:right;">
-		<div class="btn-group hideme" style="text-align:left;">
+	<div class="span4 hideme" style="text-align:right;">
+		<div style="padding-right:10px;">
+		<div class="btn-group" style="text-align:left;">
 			<a href="#" id="task_color_sel_menu" role="button" class="btn dropdown-toggle" data-toggle="dropdown">
 				<span class="icon-adjust"></span>
 				<b class="caret"></b>
@@ -215,7 +220,7 @@ cursor:default;
 				<li><a tabindex="-1" onclick="set_swatch_color('orange');" href="#"><span class="swatch_block swatch_orange"></span></a></li>
 			</ul>
 		</div>
-		<div class="btn-group hideme" style="text-align:left;">
+		<div class="btn-group" style="text-align:left;">
 			<a href="#" id="view_mode" role="button" class="btn dropdown-toggle" data-toggle="dropdown">
 				<span class="icon-eye-open"></span>
 				<b class="caret"></b>
@@ -226,9 +231,10 @@ cursor:default;
 			</ul>
 		</div>
 		<div class="btn-group" style="text-align:left;">
-			<a class="btn" onclick="toggle_settings();" href="#">
-				<span id="settings_toggler" class="icon-arrow-down"></span>
+			<a class="btn" href="#gantticc_help_modal" role="button" data-toggle="modal">
+				<span class="icon-question-sign"></span>
 			</a>
+		</div>
 		</div>
 	</div>
 </div></div>
@@ -276,10 +282,15 @@ cursor:default;
 		<h3>Help</h3>
 	</div>
 	<div class="modal-body">
+		<h4>Tasks</h4>
 		<ul>
-			<li>Double click on empty space to add new task.</li>
-			<li>Click on task bubble to view/edit details.</li>
-			<li>Click and drag task bubble to position it.</li>
+			<li>To create, double click on empty space.</li>
+			<li>To set start date, click and drag task bubble to desired position.</li>
+			<li>To set end date, click on the right edge and drag to desired position.</li>
+			<li>To view/edit details, click on task bubble.</li>
+		</ul>
+		<h4>Navigation</h4>
+		<ul>
 			<li>Click and drag the background to scroll.</li>
 		</ul>
 	</div>
@@ -336,6 +347,7 @@ cursor:default;
 			$('.hideme').each(function(){
 				$(this).hide();
 			});
+			$('#topbar-center').removeClass('span4').addClass('span8');
 		}
     });
 	

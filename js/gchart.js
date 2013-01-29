@@ -648,8 +648,8 @@ Gantt.prototype = {
 		var today = new Date();
 		var today_x = TaskBlock.prototype.calculateXFromDate(today);
 		if (today_x >= 0) {
-			var mark = new Rect(today_x, 0, GANTT_DAY_BLK_LEN, stage.height).addTo(this.bg);
-			var mark2 = new Rect(today_x, -1, GANTT_DAY_BLK_LEN, GANTT_TASK_BLK_HGT).addBefore(gantticc.dates[0].textAsset);
+			var mark = new Rect(today_x+1, 0, GANTT_DAY_BLK_LEN-1, stage.height).addTo(this.bg);
+			var mark2 = new Rect(today_x+1, -1, GANTT_DAY_BLK_LEN-1, GANTT_TASK_BLK_HGT).addBefore(gantticc.dates[0].textAsset);
 			mark.fill('#eee');
 			mark2.fill('#eee');
 		}
