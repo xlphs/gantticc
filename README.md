@@ -10,4 +10,4 @@ To use it, just run `test.html` locally in your favorite browser (it uses HTML5 
 
 #### Preview
 
-[Screenshot](http://pbrd.co/Vf0tvm)
+[Screenshot](http://pbrd.co/WdmaOB)
