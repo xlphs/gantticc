@@ -112,7 +112,7 @@ TaskBlock.prototype = {
 			.attr({
 				strokeColor: '#bbb',
 				strokeWidth: 2,
-				filters: filter.blur(0) // to sharpen border, works in Chrome only
+				filters: filter.blur(0)
 			})
 			.fill(color.parse(colorHex))
 			.addTo(group);
@@ -190,7 +190,7 @@ TaskBlock.prototype = {
 		  if (err) return;
 		  new Rect(0, 0, w, h).attr({
 		    fillImage: this.attr({
-		      width: w, height: h
+				width: w, height: h
 		    }),
 			x: x, y: y
 		  }).addTo(context);
