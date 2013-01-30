@@ -27,7 +27,6 @@ function get_project() {
 	} else {
 		gnproject = {
 			title: "My Awesome Project",
-			color: "blue",
 			start: new Date().toISOString(),
 			end: new Date(new Date().getTime() + 1000*3600*24*49).toISOString()
 		};
@@ -55,6 +54,7 @@ function get_tasks() {
 			{
 				tid: "1",
 				title: "New Task",
+				color: "gray",
 				start: new Date().toISOString(),
 				end: new Date(new Date().getTime() + 1000*3600*24*2).toISOString(),
 				row: "1",

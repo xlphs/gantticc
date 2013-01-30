@@ -280,7 +280,6 @@ function Gantt(x, y) {
 	this.width = 30*GANTT_DAY_BLK_LEN;
 	this.height = 0;
 	this.unit = "day"; // default unit
-	this.swatch = null;
 	
 	// default unit is day, so show the current month
 	var today = new Date();
@@ -507,7 +506,7 @@ Gantt.prototype = {
 		var newTask = {
 			tid: newId,
 			title: "New Task",
-			color: (_gantt.swatch) ? _gantt.swatch : "gray",
+			color: "gray",
 			row: row.toString(),
 			start: newStartDate,
 			end: newEndDate,
@@ -788,23 +787,13 @@ Gantt.prototype = {
 		var d = TaskBlock.prototype.calculateDateFromX(-1*this.x+GANTT_UNIT_INDT_LEN);
 		return d;
 	},
-	highlightTaskByColor: function(color) {
-		if (color == null || color === "null") {
-			this.swatch = null;
-			// reset attributes
-			for (var i=0; i<gantticc.tasks.length; i++) {
-				var tblk = gantticc.tasks[i];
-				tblk.group_asset.attr({ visible: true });
-			}
-		} else {
-			this.swatch = color;
-			for (var i=0; i<gantticc.tasks.length; i++) {
-				var tblk = gantticc.tasks[i];
-				if (tblk.color !==  color) {
-					tblk.group_asset.attr({ visible: false });
-				} else {
-					tblk.group_asset.attr({ visible: true });
-				}
+	// @param color: color to control
+	// @param enable: true to show, false to hide
+	highlightTaskByColor: function(color, enable) {
+		for (var i=0; i<gantticc.tasks.length; i++) {
+			var tblk = gantticc.tasks[i];
+			if (tblk.color == color) {
+				tblk.group_asset.attr({ visible: enable });
 			}
 		}
 	}
