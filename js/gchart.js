@@ -11,6 +11,10 @@ var IOS_USER = false;
 if ( (navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPad/i)) ) {
 	IOS_USER = true;
 }
+var FIREFOX_USER = false;
+if (navigator.userAgent.indexOf("Firefox") != -1) {
+	FIREFOX_USER = true;
+}
 
 // the top level global context
 var ganttContext = new Group().addTo(stage);
@@ -47,9 +51,10 @@ DateBlock.prototype = {
 		_dateblk.textAsset = new Text(_dateblk.text).addTo(context);
 		// center the text (text should be an integer)
 		var nudge = (parseInt(_dateblk.text) < 10) ? 13 : 7;
+		var y_pos = (FIREFOX_USER) ? _dateblk.y+13 : _dateblk.y;
 		_dateblk.textAsset.attr({
 			x: _dateblk.x+nudge,
-			y: _dateblk.y,
+			y: y_pos,
 			textFillColor: color.parse(gantticc.header_color[0]),
 			fontFamily: 'Helvetica',
 			fontSize: '20px'
@@ -136,6 +141,7 @@ TaskBlock.prototype = {
 		
 		var title_x = 8;
 		var title_y = (IOS_USER) ? 8 : 10;
+		if (FIREFOX_USER) title_y += 11;
 		
 		if (_task.notes) {
 			_task.addIndicatorIcon(group, 'assets/task_list_16.png', 5, 7, 16, 16);
@@ -151,12 +157,14 @@ TaskBlock.prototype = {
 		});
 		
 		_task.edgeDrag_asset = new Group().attr({
-			x: this.width-2, y: 0, opacity: 0
+			x: this.width-3, y: 0, opacity: 0
 		}).addTo(group);
-		var edgeLine1 = new Rect(0, 7, 1, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
-		edgeLine1.fill(color.parse('#333'));
-		var edgeLine2 = new Rect(4, 7, 1, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
-		edgeLine2.fill(color.parse('#333'));
+		var edgeLine1 = new Rect(0, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
+		edgeLine1.fill(color.parse('#555'));
+		var edgeLine1 = new Rect(2, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
+		edgeLine1.fill(color.parse('#eee'));
+		var edgeLine2 = new Rect(4, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
+		edgeLine2.fill(color.parse('#555'));
 	},
 	showEditForm: function(task, gchart, x, y) {
 		// scroll to position the popup inside chart
@@ -277,6 +285,7 @@ function Gantt(x, y) {
 	// default unit is day, so show the current month
 	var today = new Date();
 	var unitIndicatorGrp = new Group().addTo(stage); // add to stage
+	var y_pos = (FIREFOX_USER) ? 5+13 : 5;
 	new Rect(0, 0, GANTT_UNIT_INDT_LEN-2, stage.height)
 	.attr({
 		strokeColor: '#fff',
@@ -286,7 +295,7 @@ function Gantt(x, y) {
 	.addTo(unitIndicatorGrp);
 	this.unitIndicator = new Text( today.getLiteralMonth(today.getMonth()) ).addTo(unitIndicatorGrp);
 	this.unitIndicator.attr({
-		x: 3, y: 5,
+		x: 3, y: y_pos,
 		textFillColor: color.parse(gantticc.header_color[0]),
 		fontFamily: 'Helvetica', fontSize: '20px'
 	});
