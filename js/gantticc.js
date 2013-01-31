@@ -324,6 +324,15 @@ gantticc.getUserSpecifiedProject = function(){
 	return "";
 };
 
+gantticc.resetSwatch = function(){
+	// make all colors selected
+	for (var i=1; i<gantticc.colors.length; i++) {
+		var color = gantticc.colors[i];
+		var el = $('.swatch_'+color).next().first();
+		el.addClass('swatch_checked');
+	}
+};
+
 gantticc.openInNewWind = function(){
 	// Note: Chrome will open a tiny new window, will have to reload
 	var url = location.protocol+'//'+location.host+location.pathname+'?project='+gantticc.project.pid;

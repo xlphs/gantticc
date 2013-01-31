@@ -691,6 +691,7 @@ stroke-width:2px;
 	}
 	
 	function toggle_swatch_color(color){
+		if (gantticc.heatmap.start) return;
 		var el = $('.swatch_'+color).next().first();
 		el.toggleClass('swatch_checked');
 		var enable = false;
@@ -698,7 +699,7 @@ stroke-width:2px;
 			enable = true;
 		}
 		gchart.sendMessage('set_swatch',{
-			color: color, status: enable 
+			color: color, status: enable
 		});
 	}
 	
@@ -732,6 +733,7 @@ stroke-width:2px;
 				tasks: gantticc.project.tasks,
 				no_scroll: true
 			});
+			gantticc.resetSwatch();
 			gantticc.updateJumpMonthMenu();
 			gantticc.updateCurrentMonthBtn(scrollTo);
 			gantticc.heatmap = {};
