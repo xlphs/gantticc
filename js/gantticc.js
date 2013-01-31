@@ -162,9 +162,6 @@ gantticc.init = function(){
 	} else {
 		gantticc.project = new Project(-1);
 	}
-	
-	gantticc.applyCurrentProject();
-	gantticc.updateProjectList();
 };
 
 gantticc.applyCurrentProject = function(){
@@ -345,4 +342,23 @@ gantticc.getAllTasksOnDate = function(date){
 		$.merge(arr, gantticc.projects[i].getTasksOnDate(date));
 	}
 	return arr;
+};
+
+gantticc.getWidth = function(){
+	if (gantticc.print) {
+		var a = new Date(gantticc.project.start).getTime();
+		var b = new Date(gantticc.project.end).getTime();
+		var days = (b-a)/1000/3600/24;
+		return 30*days;
+	} else {
+		return $('#controls').width();
+	}
+};
+
+gantticc.getHeight = function(){
+	if (gantticc.print) {
+		return 500;
+	} else {
+		return $(document).height()-$('#topbar').height()-7;
+	}
 };

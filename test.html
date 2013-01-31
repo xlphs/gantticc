@@ -345,6 +345,8 @@ stroke-width:2px;
 
 <script type="text/javascript" src="js/bonsai.min.js"></script>
 <script type="text/javascript">
+	var gchart;
+	
 	$(function(){
 		// ---- Entry point ----
 		// setup date picker
@@ -357,8 +359,6 @@ stroke-width:2px;
 		})
 		// setup tooltips
 		$('a[rel=tooltip]').tooltip();
-		// load data
-		gantticc.init();
 		// setup jump-to-month dropdown
 		$('#mtab').on('click', function(){
 			var x = $('#mtab').offset().left;
@@ -394,153 +394,158 @@ stroke-width:2px;
 			});
 			$('#topbar-center').removeClass('span4').addClass('span8');
 		}
-    });
-	
-	var gchart = bonsai.run(document.getElementById('gantt'),{
-		url: 'js/gchart.js?bustcache='+Math.random(),
-		width: $('#controls').width(),
-		height: $(document).height()-$('#topbar').height()-7,
-		code: function(){
-			stage.on('message:update_task', function(data){
-				if (data.cancel === 'true'){
-					ganttClickLock = 0;
-					return;
-				}
-				var task = null;
-				// find task by task id
-				var i = 0;
-				for (i; i < gantticc.tasks.length; i++){
-					task = gantticc.tasks[i];
-					if (task.tid == data.tid) break;
-				}
-				if (task == null) return;
-				if (data.delete === 'true'){
-					gchart.deleteTaskAnim(task.group_asset);
-					gantticc.tasks.splice(i, 1);
-				} else{
-					data.title = data.title;
-					task.title_asset.attr('text', data.title);
-					task.updateIndicatorIcon(data.notes);
-					task.updateTaskColor(data.color);
-				}
-				ganttClickLock = 0;
-			});
-			stage.on('message:update_project', function(data){
-				if ((typeof data.start_date) != 'undefined'){
-					var scroll_date = new Date();
-					if (data.scroll_date) {
-						scroll_date = new Date(data.scroll_date);
+		// init
+		gantticc.init();
+		
+		gchart = bonsai.run(document.getElementById('gantt'),{
+			url: 'js/gchart.js?bustcache='+Math.random(),
+			width: gantticc.getWidth(),
+			height: gantticc.getHeight(),
+			code: function(){
+				stage.on('message:update_task', function(data){
+					if (data.cancel === 'true'){
+						ganttClickLock = 0;
+						return;
 					}
+					var task = null;
+					// find task by task id
+					var i = 0;
+					for (i; i < gantticc.tasks.length; i++){
+						task = gantticc.tasks[i];
+						if (task.tid == data.tid) break;
+					}
+					if (task == null) return;
+					if (data.delete === 'true'){
+						gchart.deleteTaskAnim(task.group_asset);
+						gantticc.tasks.splice(i, 1);
+					} else{
+						data.title = data.title;
+						task.title_asset.attr('text', data.title);
+						task.updateIndicatorIcon(data.notes);
+						task.updateTaskColor(data.color);
+					}
+					ganttClickLock = 0;
+				});
+				stage.on('message:update_project', function(data){
+					if ((typeof data.start_date) != 'undefined'){
+						var scroll_date = new Date();
+						if (data.scroll_date) {
+							scroll_date = new Date(data.scroll_date);
+						}
+						// redraw header with new dates
+						gchart.drawHeader(data.start_date, data.end_date);
+						gchart.scrollToDate(scroll_date);
+						gchart.updateCurrentUnit();
+					}
+				});
+				stage.on('message:init_tasks', function(data){
+					var scroll_date = new Date();
+					if (data.no_scroll) {
+						scroll_date = gchart.getScrollDate();
+					}
+					gchart.initTasks(data.tasks);
+					gchart.scrollToDate(scroll_date);
+					// update jump to month button
+					stage.sendMessage('scroll_date', {date: scroll_date});
+				});
+				stage.on('message:init_heatmap', function(data){
+					// preserve current scroll position
+					var scrollDate = gchart.getScrollDate();
 					// redraw header with new dates
 					gchart.drawHeader(data.start_date, data.end_date);
-					gchart.scrollToDate(scroll_date);
-					gchart.updateCurrentUnit();
-				}
-			});
-			stage.on('message:init_tasks', function(data){
-				var scroll_date = new Date();
-				if (data.no_scroll) {
-					scroll_date = gchart.getScrollDate();
-				}
-				gchart.initTasks(data.tasks);
-				gchart.scrollToDate(scroll_date);
-				// update jump to month button
-				stage.sendMessage('scroll_date', {date: scroll_date});
-			});
-			stage.on('message:init_heatmap', function(data){
-				// preserve current scroll position
-				var scrollDate = gchart.getScrollDate();
-				// redraw header with new dates
-				gchart.drawHeader(data.start_date, data.end_date);
-				gchart.initHeatMap(data.data);
-				gchart.scrollToDate(scrollDate);
-				// update jump to month button
-				stage.sendMessage('scroll_date', {date: scrollDate});
-			});
-			stage.on('message:scroll_to_date', function(data){
-				var date = new Date(data.date);
-				gchart.scrollToDate(date);
-			});
-			stage.on('message:set_swatch', function(data){
-				gchart.highlightTaskByColor(data.color, data.status);
-			});
-			stage.on('message:set_scale', function(data){
-				if (gchart.unit === data.unit){
-					// jump to today if no change
-					var date = new Date();
+					gchart.initHeatMap(data.data);
+					gchart.scrollToDate(scrollDate);
+					// update jump to month button
+					stage.sendMessage('scroll_date', {date: scrollDate});
+				});
+				stage.on('message:scroll_to_date', function(data){
+					var date = new Date(data.date);
 					gchart.scrollToDate(date);
-				}
-				// preserve current scroll position
-				var scrollDate = gchart.getScrollDate();
-				gchart.unit = data.unit;
-				gchart.drawHeader(data.start_date, data.end_date);
-				gchart.updateCurrentUnit(1);
-				gchart.scrollToDate(scrollDate);
-				// update jump to month button
-				stage.sendMessage('scroll_date', {date: scrollDate});
-			});
-			stage.on('message:resize', function(data){
-				// TODO: resize chart
-			});
-			stage.sendMessage('ready',{});
-		}
-	});
-	
-	gchart.on('load', function(data){
-		gchart.on('message:ready', function(data){
-			// send the dates to gchart
-			var startdate = new Date($('#project_startdate').val()).toISOString();
-			var enddate = new Date($('#project_enddate').val()).toISOString();
-			gchart.sendMessage('update_project',{
-				start_date: startdate,
-				end_date: enddate
-			});
-			// send tasks to gchart
-			gchart.sendMessage('init_tasks',{
-				tasks: gantticc.project.tasks
-			});
-		});
-		gchart.on('message:edit_task', function(data){
-			var task = gantticc.project.getTask(data.tid);
-			if (task == null) return;
-			// show the title edit form
-			$('#title_tid').val(task.tid);
-			$('#title_txtfield').val(task.title);
-			if (!task.color) task.color = "gray";
-			$('#task_color').val(task.color);
-			for (var i=0; i<gantticc.colors.length; i++){
-				var c = gantticc.colors[i];
-				$('#task_color_'+c).removeClass('swatch_sel');
+				});
+				stage.on('message:set_swatch', function(data){
+					gchart.highlightTaskByColor(data.color, data.status);
+				});
+				stage.on('message:set_scale', function(data){
+					if (gchart.unit === data.unit){
+						// jump to today if no change
+						var date = new Date();
+						gchart.scrollToDate(date);
+					}
+					// preserve current scroll position
+					var scrollDate = gchart.getScrollDate();
+					gchart.unit = data.unit;
+					gchart.drawHeader(data.start_date, data.end_date);
+					gchart.updateCurrentUnit(1);
+					gchart.scrollToDate(scrollDate);
+					// update jump to month button
+					stage.sendMessage('scroll_date', {date: scrollDate});
+				});
+				stage.on('message:resize', function(data){
+					// TODO: resize chart
+				});
+				stage.sendMessage('ready',{});
 			}
-			$('#task_color_'+task.color).addClass('swatch_sel');
-			$('#notes_txtfield').val(task.notes);
-			var y_pos = data.y+$('#topbar').height();
-			if ( !$('#settings').is(":hidden") ) y_pos += $('#settings').height();
-			$('#task_form').css('top', y_pos);
-			$('#task_form').css('left', data.x);
-			$('#task_form').show();
 		});
-		gchart.on('message:update_task', function(data){
-			var task = gantticc.project.getTask(data.tid);
-			if (task == null) return;
-			if (data.start) task.start = data.start;
-			if (data.end) task.end = data.end;
-			if (data.row) task.row = data.row;
-			gantticc.project.saveTasks();
-		});
-		gchart.on('message:new_task', function(data){
-			gantticc.project.addTask(data.task);
-		});
-		gchart.on('message:scroll_date', function(data){
-			var cur = new Date(data.date);
-			gantticc.updateCurrentMonthBtn(cur);
-		});
-	});
 	
-	$(window).on('resize', function(){
-		gchart.sendMessage('resize',{
-			width: $('#controls').width(),
-			height: $(document).height()-$('#topbar').height()-7
+		gchart.on('load', function(data){
+			gchart.on('message:ready', function(data){
+				// send the dates to gchart
+				var startdate = new Date($('#project_startdate').val()).toISOString();
+				var enddate = new Date($('#project_enddate').val()).toISOString();
+				gchart.sendMessage('update_project',{
+					start_date: startdate,
+					end_date: enddate
+				});
+				// send tasks to gchart
+				gchart.sendMessage('init_tasks',{
+					tasks: gantticc.project.tasks
+				});
+			});
+			gchart.on('message:edit_task', function(data){
+				var task = gantticc.project.getTask(data.tid);
+				if (task == null) return;
+				// show the title edit form
+				$('#title_tid').val(task.tid);
+				$('#title_txtfield').val(task.title);
+				if (!task.color) task.color = "gray";
+				$('#task_color').val(task.color);
+				for (var i=0; i<gantticc.colors.length; i++){
+					var c = gantticc.colors[i];
+					$('#task_color_'+c).removeClass('swatch_sel');
+				}
+				$('#task_color_'+task.color).addClass('swatch_sel');
+				$('#notes_txtfield').val(task.notes);
+				var y_pos = data.y+$('#topbar').height();
+				if ( !$('#settings').is(":hidden") ) y_pos += $('#settings').height();
+				$('#task_form').css('top', y_pos);
+				$('#task_form').css('left', data.x);
+				$('#task_form').show();
+			});
+			gchart.on('message:update_task', function(data){
+				var task = gantticc.project.getTask(data.tid);
+				if (task == null) return;
+				if (data.start) task.start = data.start;
+				if (data.end) task.end = data.end;
+				if (data.row) task.row = data.row;
+				gantticc.project.saveTasks();
+			});
+			gchart.on('message:new_task', function(data){
+				gantticc.project.addTask(data.task);
+			});
+			gchart.on('message:scroll_date', function(data){
+				var cur = new Date(data.date);
+				gantticc.updateCurrentMonthBtn(cur);
+			});
+		});
+		// apply data into ui
+		gantticc.applyCurrentProject();
+		gantticc.updateProjectList();
+		
+		$(window).on('resize', function(){
+			gchart.sendMessage('resize',{
+				width: $('#controls').width(),
+				height: $(document).height()-$('#topbar').height()-7
+			});
 		});
 	});
 	
