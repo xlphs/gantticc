@@ -9,6 +9,7 @@
 	<script type="text/javascript" src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="js/bootstrap-datepicker.js"></script>
 	<script type="text/javascript" src="js/gantticc.js"></script>
+	<script type="text/javascript" src="js/d3.v3.min.js"></script>
 	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<link rel="stylesheet" href="css/datepicker.css">
 </head>
@@ -178,6 +179,20 @@ background-image:none;
 filter:progid:DXImageTransform.Microsoft.gradient(enabled = false);
 cursor:default;
 }
+svg {
+font-size:10px;
+shape-rendering:crispEdges;
+}
+.day {
+fill:#fff;
+stroke:#000;
+stroke-opacity:.1;
+}
+.month {
+fill:none;
+stroke:#000;
+stroke-width:2px;
+}
 </style>
 
 <body>
@@ -254,6 +269,8 @@ cursor:default;
 			<ul class="dropdown-menu" role="menu" aria-labelledby="view_mode">
 				<li><a tabindex="-1" href="#" onclick="set_scale('day');">Day</a></li>
 				<li><a tabindex="-1" href="#" onclick="set_scale('week');">Week</a></li>
+				<li class="divider"></li>
+				<li><a id="heatmap_status" tabindex="-1" href="#" onclick="project_heatmap();">Heat Map</a></li>
 			</ul>
 		</div>
 		<div class="btn-group" style="text-align:left;">
@@ -421,6 +438,16 @@ cursor:default;
 			stage.on('message:init_tasks', function(data){
 				gchart.initTasks(data.tasks);
 				gchart.scrollToDate(new Date());
+				// update jump to month button
+				stage.sendMessage('scroll_date', {date: new Date()});
+			});
+			stage.on('message:init_heatmap', function(data){
+				// preserve current scroll position
+				var scrollDate = gchart.getScrollDate();
+				// redraw header with new dates
+				gchart.drawHeader(data.start_date, data.end_date);
+				gchart.initHeatMap(data.data);
+				gchart.scrollToDate(scrollDate);
 				// update jump to month button
 				stage.sendMessage('scroll_date', {date: new Date()});
 			});
@@ -674,6 +701,65 @@ cursor:default;
 			$('#settings').slideUp();
 		}
 	}
+	
+	function project_heatmap(){
+		if ($('#heatmap_status').attr('value') === "on") {
+			$('#heatmap_status').html('Heat Map');
+			$('#heatmap_status').attr('value', '');
+			project_load(gantticc.project.pid);
+			return;
+		} else {
+			$('#heatmap_status').html('<b>Heat Map</b>');
+			$('#heatmap_status').attr('value', 'on');
+		}
+		
+		// Generate nice data for plotting
+		// 1. Get the start/end date by looking at all projects
+		var start = new Date(gantticc.project.start).getTime();
+		var end = new Date(gantticc.project.end).getTime();
+		for (var i=0; i<gantticc.projects.length; i++){
+			var prj = gantticc.projects[0];
+			var a = new Date(prj.start).getTime();
+			var b = new Date(prj.end).getTime();
+			if (start > a) start = a;
+			if (end < b) end = b;
+		}
+		// 2. For each day, compute the number of tasks
+		var theData = [],
+			totalData = [],
+			max = 0;
+		for (var t=start; t<=end; t+=1000*3600*24) {
+			var data = {
+				date: t,
+				tasks: gantticc.getAllTasksOnDate(new Date(t))
+			};
+			if (max < data.tasks.length) max = data.tasks.length;
+			totalData.push(data);
+		}
+		max++;
+		// 3. For each project, generate data for plotting
+		var projectsData = [];
+		for (var i=0; i<gantticc.projects.length; i++){
+			var prj = gantticc.projects[i];
+			var data = {
+				title: prj.title,
+				data: prj.getDataForHeatMap()
+			}
+			projectsData.push(data);
+		}
+		theData = [{
+			title: "Total",
+			data: totalData
+		}];
+		$.merge(theData, projectsData);
+		
+		gchart.sendMessage('init_heatmap',{
+			start_date: new Date(start).toISOString(),
+			end_date: new Date(end).toISOString(),
+			data: theData
+		});
+	}
+	
 </script>
 
 </html>

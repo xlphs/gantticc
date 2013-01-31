@@ -67,7 +67,7 @@ Project.prototype = {
 		this.tasks.push(task);
 		this.saveTasks();
 	},
-	addDummyTask: function() {
+	addDummyTask: function(){
 		this.tasks.push({
 			tid: "1",
 			title: "New Task",
@@ -77,12 +77,47 @@ Project.prototype = {
 			row: "1",
 			notes: "Random notes"
 		});
+	},
+	getTasksOnDate: function(date){
+		var tasks = [];
+		for (var i=0; i<this.tasks.length; i++) {
+			var t = this.tasks[i];
+			var start = new Date(t.start).getTime();
+			var end = new Date(t.end).getTime();
+			var d = date.getTime();
+			if (start <= d && end >= d) {
+				tasks.push($.extend(true, {}, t)); // return copy
+			}
+		}
+		return tasks;
+	},
+	getDataForHeatMap: function(){
+		var data = [];
+		var start = new Date(this.start).getTime();
+		var end = new Date(this.end).getTime();
+		for (var t=start; t<=end; t+=1000*3600*24) {
+			data.push({
+				date: t,
+				tasks: this.getTasksOnDate(new Date(t))
+			});
+		}
+		return data;
 	}
+};
+
+gantticc.getColorValue = function(c){
+	if (!c) c = "gray"; // default color
+	return gantticc.colorValues[c][0];
 };
 
 gantticc.init = function(){
 	// Predefined colors
 	gantticc.colors = ['null', 'gray', 'blue', 'orange'];
+	gantticc.colorValues = {
+		gray: ["#e5e5e5", "#f2f2f2"],
+		blue: ["#bee1ef", "#d4effc"],
+		orange: ["#ff944d", "#ffa264"]
+	};
 	// Max number of projects
 	gantticc.maxProjCount = 5;
 	
@@ -288,4 +323,12 @@ gantticc.openInNewWind = function(){
 	// Note: Chrome will open a tiny new window, will have to reload
 	var url = location.protocol+'//'+location.host+location.pathname+'?project='+gantticc.project.pid;
 	window.open(url);
+};
+
+gantticc.getAllTasksOnDate = function(date){
+	var arr = [];
+	for (var i=0; i<gantticc.projects.length; i++) {
+		$.merge(arr, gantticc.projects[i].getTasksOnDate(date));
+	}
+	return arr;
 };

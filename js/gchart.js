@@ -56,7 +56,7 @@ DateBlock.prototype = {
 			x: _dateblk.x+nudge,
 			y: y_pos,
 			textFillColor: color.parse(gantticc.header_color[0]),
-			fontFamily: 'Helvetica',
+			fontFamily: 'Helvetica, sans-serif',
 			fontSize: '20px'
 		});
 	},
@@ -78,20 +78,29 @@ DateBlock.prototype = {
 // constructor
 function TaskBlock(context, x, task) {
 	this.x = x;
-	this.y = GANTT_TASK_BLK_HGT*parseInt(task.row);
-	this.tid = task.tid;
-	this.dayspan = this.calculateDaySpan(task.end, task.start);
-	// day is the default unit, so weekspan must be null
-	this.weekspan = null;
-	this.width = GANTT_DAY_BLK_LEN*this.dayspan;
-	this.startDate = new Date(task.start);
-	this.endDate = new Date(task.end);
-	this.title = task.title;
-	if (task.notes.length > 0) {
-		this.notes = "show";
+	if (task.count) {
+		// heatmap block
+		this.count = task.count;
+		this.y = task.y;
+		this.dayspan = 1;
+		this.weekspan = null;
+		this.width = GANTT_DAY_BLK_LEN*this.dayspan;
+		this.startDate = new Date(task.date);
+	} else {
+		this.y = GANTT_TASK_BLK_HGT*parseInt(task.row);
+		this.tid = task.tid;
+		this.dayspan = this.calculateDaySpan(task.end, task.start);
+		// day is the default unit, so weekspan must be null
+		this.weekspan = null;
+		this.width = GANTT_DAY_BLK_LEN*this.dayspan;
+		this.startDate = new Date(task.start);
+		this.endDate = new Date(task.end);
+		this.title = task.title;
+		if (task.notes.length > 0) {
+			this.notes = "show";
+		}
 	}
 	this.color = (task.color) ? task.color : "gray";
-	this.extended = false;
 	this.show(context);
 }
 
@@ -108,26 +117,39 @@ TaskBlock.prototype = {
 		
 		var span = (this.weekspan === null) ? this.dayspan : Math.ceil(this.weekspan);
 		var colorHex = gantticc[_task.color][0];
-		var bg = new Rect(0, 0, GANTT_DAY_BLK_LEN*span, GANTT_TASK_BLK_HGT, 4)
-			.attr({
-				strokeColor: '#bbb',
-				strokeWidth: 2,
-				filters: filter.blur(0)
+		var bg;
+		if (_task.count) {
+			group.attr('cursor', "default");
+			bg = new Rect(0, 0, GANTT_DAY_BLK_LEN*span, GANTT_TASK_BLK_HGT)
+				.attr('filters', new filter.Opacity(0.1*parseInt(_task.count)))
+				.fill(color.parse("rgb(49,130,189)"))
+				.addTo(group);
+			_task.bg_asset = bg;
+			group.on('mouseover', function(e){
+				stage.emit('heatmapblkmsover', _task, e);
 			})
-			.fill(color.parse(colorHex))
-			.addTo(group);
+			.on('mouseout', function(e){
+				stage.emit('heatmapblkmsout', _task, e);
+			});
+			return;
+		} else {
+			bg = new Rect(0, 0, GANTT_DAY_BLK_LEN*span, GANTT_TASK_BLK_HGT, 4)
+				.attr({
+					strokeColor: '#bbb',
+					strokeWidth: 2,
+					filters: filter.blur(0)
+				})
+				.fill(color.parse(colorHex))
+				.addTo(group);
+		}
 		_task.bg_asset = bg;
 		
-		group.on('mouseover', function(e) {
+		group.on('mouseover', function(e){
 			var c = gantticc[_task.color][1];
 			_task.bg_asset.fill(color.parse(c));
-			// check if title bg should be extended
-			//if (_task.extended == false && _task.title.length*10 > _task.bg_asset.attr('width')) {
-				//console.log(_task.title.length);
-			//}
 			_task.edgeDrag_asset.attr({opacity: 1});
 		})
-		.on('mouseout', function(e) {
+		.on('mouseout', function(e){
 			var c = gantticc[_task.color][0];
 			_task.bg_asset.fill(color.parse(c));
 			_task.edgeDrag_asset.attr({opacity: 0});
@@ -153,7 +175,7 @@ TaskBlock.prototype = {
 		text.attr({
 			x: title_x, y: title_y,
 			textFillColor: color.parse('#333'),
-			fontFamily: 'Helvetica', fontSize: '16px'
+			fontFamily: 'Helvetica, sans-serif', fontSize: '16px'
 		});
 		
 		_task.edgeDrag_asset = new Group().attr({
@@ -244,7 +266,7 @@ TaskBlock.prototype = {
 			this.width = this.dayspan*GANTT_DAY_BLK_LEN;
 		}
 		this.bg_asset.attr({ width: this.width });
-		this.edgeDrag_asset.attr({ x: this.width-2 });
+		if (!this.count) this.edgeDrag_asset.attr({ x: this.width-2 });
 	},
 	calculateDateFromX: function(x_pos) {
 		// look at only the x position
@@ -280,10 +302,15 @@ function Gantt(x, y) {
 	this.width = 30*GANTT_DAY_BLK_LEN;
 	this.height = 0;
 	this.unit = "day"; // default unit
+	this.mode = "gantt" // gantt or heatmap
 	
 	// default unit is day, so show the current month
 	var today = new Date();
-	var unitIndicatorGrp = new Group().addTo(stage); // add to stage
+	this.leftbar = new Group().addTo(stage); // add to stage
+	this.leftbar_titles = new Group().attr({
+		x: 1,
+		y: 0
+	}).addTo(stage);
 	var y_pos = (FIREFOX_USER) ? 5+13 : 5;
 	new Rect(0, 0, GANTT_UNIT_INDT_LEN-2, stage.height)
 	.attr({
@@ -291,12 +318,12 @@ function Gantt(x, y) {
 		strokeWidth: 2
 	})
 	.fill('#fff')
-	.addTo(unitIndicatorGrp);
-	this.unitIndicator = new Text( today.getLiteralMonth(today.getMonth()) ).addTo(unitIndicatorGrp);
+	.addTo(this.leftbar);
+	this.unitIndicator = new Text( today.getLiteralMonth(today.getMonth()) ).addTo(this.leftbar);
 	this.unitIndicator.attr({
 		x: 3, y: y_pos,
 		textFillColor: color.parse(gantticc.header_color[0]),
-		fontFamily: 'Helvetica', fontSize: '20px'
+		fontFamily: 'Helvetica, sans-serif', fontSize: '20px'
 	});
 	
 	this.bg = new Group().attr({
@@ -372,7 +399,7 @@ Gantt.prototype = {
 				if (Math.abs(diff_x) > Math.abs(diff_y)) {
 					_gantt.scrollX(diff_x);
 				} else {
-					_gantt.scrollY(diff_y);
+					if (_gantt.mode !== "heatmap") _gantt.scrollY(diff_y);
 				}
 				x_start = e.x;
 				y_start = e.y;
@@ -686,23 +713,85 @@ Gantt.prototype = {
 		}
 	},
 	initTasks: function(arr) {
+		this.mode = "gantt";
 		if (gantticc.tasks.length > 0) {
 			gantticc.tasks.length = 0;
 			this.body.clear();
 		}
-		if ((typeof arr) != 'undefined') {
-			for (var i = 0; i < arr.length; i++) {
-				var t = arr[i];
+		this.leftbar_titles.clear();
+		if ((typeof arr) == 'undefined') return;
+		for (var i = 0; i < arr.length; i++) {
+			var t = arr[i];
+			// calculate x coordinate
+			var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.start));
+			var tb = new TaskBlock(this.body, x_pos, t);
+			gantticc.tasks.push(tb);
+			// correct span
+			if (this.unit === "week") {
+				tb.updateSpan(this.unit);
+			}
+		}
+	},
+	initHeatMap: function(data){
+		var _gantt = this;
+		this.mode = "heatmap";
+		if (gantticc.tasks.length > 0) {
+			gantticc.tasks.length = 0;
+			_gantt.body.clear();
+		}
+		if ((typeof data) == 'undefined') return;
+		this.leftbar_titles.clear();
+		for (var i=0; i < data.length; i++) {
+			var arr = data[i];
+			// create project title
+			var y_pos = (i+1)*60+8;
+			if (FIREFOX_USER) y_pos += 13;
+			var title = new Text(arr.title).addTo(this.leftbar_titles)
+				.attr({
+					x: 0, y: y_pos,
+					fontFamily: 'Helvetica, sans-serif',
+					fontSize: '18px',
+					textFillColor: color.parse(gantticc.header_color[0])
+				});
+			for (var j=0; j<arr.data.length; j++) {
+				var t = arr.data[j];
+				t.count = t.tasks.length.toString();
+				t.y = (i+1)*60;
 				// calculate x coordinate
-				var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.start));
+				var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.date));
 				var tb = new TaskBlock(this.body, x_pos, t);
 				gantticc.tasks.push(tb);
 				// correct span
-				if (this.unit === "week") {
+				if (_gantt.unit === "week") {
 					tb.updateSpan(this.unit);
 				}
 			}
 		}
+		// add tooltip to stage (floating)
+		if (!_gantt.tooltip_group) {
+			_gantt.tooltip_group = new Group().addTo(stage).attr('visible', false);
+			_gantt.tooltip = new Text("0 tasks")
+				.addTo(this.tooltip_group)
+				.attr({
+					fontFamily: 'Helvetica, sans-serif',
+					fontSize: '14px',
+					textFillColor: 'black'
+				});
+		}
+		stage.on('heatmapblkmsover', function(task, e){
+			// TODO: show statistic in week mode
+			if (_gantt.unit === "week") return;
+			var tt = (parseInt(task.count) == 1) ? " task" : " tasks";
+			_gantt.tooltip.attr('text', task.count+tt);
+			_gantt.tooltip_group.attr({
+				x: e.x+25,
+				y: e.y+5,
+				visible: true
+			});
+		});
+		stage.on('heatmapblkmsout', function(task, e){
+			_gantt.tooltip_group.attr('visible', false);
+		});
 	},
 	// @param anim: set to 1 to render animation
 	scrollX: function(x_offset, anim) {
