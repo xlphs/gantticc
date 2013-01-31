@@ -697,6 +697,10 @@ Gantt.prototype = {
 				var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.start));
 				var tb = new TaskBlock(this.body, x_pos, t);
 				gantticc.tasks.push(tb);
+				// correct span
+				if (this.unit === "week") {
+					tb.updateSpan(this.unit);
+				}
 			}
 		}
 	},

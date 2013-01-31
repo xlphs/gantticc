@@ -185,19 +185,28 @@ cursor:default;
 <div id="settings" class="container-fluid">
 	<div class="row-fluid"><div class="span12 form-inline" style="padding:10px;">
 		<label for="project_title">Project: </label>
-		<input type="text" id="project_title_txtfield" name="project_title" value="" />
+		<div class="input-prepend">
+			<div class="btn-group">
+				<button class="btn dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+				<ul id="project_list" class="dropdown-menu"></ul>
+			</div>
+			<input type="text" id="project_title_txtfield" name="project_title" value="" />
+		</div>
 		<label for="project_startdate">Start: </label>
 		<input type="text" class="input-small datepickr" name="project_startdate" id="project_startdate" value="" size="12" />
 		<label for="project_enddate">End: </label>
 		<input type="text" class="input-small datepickr" name="project_enddate" id="project_enddate" value="" size="12" />
-		<button class="btn" onclick="project_entry_submit();">
+		<button class="btn" onclick="project_update();">
 			<span class="icon-ok"></span>
 		</button>
-		<a class="btn" href="#project_delete_modal" role="button" data-toggle="modal">
+		<a class="btn" href="#project_delete_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="bottom" data-original-title="Delete Project">
 			<span class="icon-trash"></span>
 		</a>
-		<a class="btn" href="#project_info_modal" role="button" data-toggle="modal">
+		<a class="btn" href="#project_info_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="bottom" data-original-title="Project Info">
 			<span class="icon-info-sign"></span>
+		</a>
+		<a class="btn" href="#" onclick="gantticc.openInNewWind();" rel="tooltip" data-placement="bottom" data-original-title="Open in New Window">
+			<span class="icon-share-alt"></span>
 		</a>
 	</div></div>
 </div>
@@ -280,7 +289,7 @@ cursor:default;
 	<div class="modal-body"><p>Are you sure you want to delete this project?</p></div>
 	<div class="modal-footer">
 		<button class="btn" data-dismiss="modal" aria-hidden="true">No</a>
-		<button class="btn btn-danger" data-dismiss="modal" aria-hidden="true" onclick="delete_everything();">Delete project</a>
+		<button class="btn btn-danger" data-dismiss="modal" aria-hidden="true" onclick="delete_cur_project();">Delete project</a>
 	</div>
 </div>
 <div id="project_info_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
@@ -330,8 +339,10 @@ cursor:default;
 		$(".datepickr").on('changeDate', function(e){
 			$(e.target).datepicker('hide');
 		})
+		// setup tooltips
+		$('a[rel=tooltip]').tooltip();
 		// load data
-		init_project();
+		gantticc.init();
 		// setup jump-to-month dropdown
 		$('#mtab').on('click', function(){
 			var x = $('#mtab').offset().left;
@@ -346,12 +357,18 @@ cursor:default;
 				msel.hide();
 			}
 		});
+		// listen for escape to cancel task editing
+		$(document).on('keydown', function(e) {
+			if (e.keyCode == 27) {
+				if ($('#task_form').is(':visible')) task_form_cancel();
+			}
+		});
 		// setup project info model
 		$('#project_info_modal').on('show', function(){
 			var html = [];
-			html.push("<p>Number of tasks: "+gntasks.length+"</p>");
+			html.push("<p>Number of tasks: "+gantticc.project.tasks.length+"</p>");
 			html.push("<p>CSV data can be imported into other apps such as Google Calendar. Just copy and paste the text below and save as a .csv file.</p>");
-			html.push("<textarea class=\"span6\" rows=\"5\">"+export_data("google_cal")+"</textarea>");
+			html.push("<textarea class=\"span6\" rows=\"5\">"+gantticc.exportData("google_cal")+"</textarea>");
 			$('#project_info').html(html.join(""));
 		});
 		if ( $('#topbar').height() > 44) {
@@ -380,9 +397,7 @@ cursor:default;
 					task = gantticc.tasks[i];
 					if (task.tid == data.tid) break;
 				}
-				if (task == null){
-					return;
-				}
+				if (task == null) return;
 				if (data.delete === 'true'){
 					gchart.deleteTaskAnim(task.group_asset);
 					gantticc.tasks.splice(i, 1);
@@ -406,6 +421,8 @@ cursor:default;
 			stage.on('message:init_tasks', function(data){
 				gchart.initTasks(data.tasks);
 				gchart.scrollToDate(new Date());
+				// update jump to month button
+				stage.sendMessage('scroll_date', {date: new Date()});
 			});
 			stage.on('message:scroll_to_date', function(data){
 				var date = new Date(data.date);
@@ -426,6 +443,8 @@ cursor:default;
 				gchart.drawHeader(data.start_date, data.end_date);
 				gchart.updateCurrentUnit(1);
 				gchart.scrollToDate(scrollDate);
+				// update jump to month button
+				stage.sendMessage('scroll_date', {date: scrollDate});
 			});
 			stage.on('message:resize', function(data){
 				// TODO: resize chart
@@ -444,24 +463,20 @@ cursor:default;
 				end_date: enddate
 			});
 			// send tasks to gchart
-			get_tasks();
 			gchart.sendMessage('init_tasks',{
-				tasks: gntasks
+				tasks: gantticc.project.tasks
 			});
 		});
 		gchart.on('message:edit_task', function(data){
-			var task;
-			for (var i=0; i<gntasks.length; i++){
-				task = gntasks[i];
-				if (task.tid == data.tid) break;
-			}
+			var task = gantticc.project.getTask(data.tid);
+			if (task == null) return;
 			// show the title edit form
 			$('#title_tid').val(task.tid);
 			$('#title_txtfield').val(task.title);
 			if (!task.color) task.color = "gray";
 			$('#task_color').val(task.color);
-			for (var i=0; i<gncolors.length; i++){
-				var c = gncolors[i];
+			for (var i=0; i<gantticc.colors.length; i++){
+				var c = gantticc.colors[i];
 				$('#task_color_'+c).removeClass('swatch_sel');
 			}
 			$('#task_color_'+task.color).addClass('swatch_sel');
@@ -473,24 +488,19 @@ cursor:default;
 			$('#task_form').show();
 		});
 		gchart.on('message:update_task', function(data){
-			var task;
-			for (var i=0; i<gntasks.length; i++){
-				task = gntasks[i];
-				if (task.tid == data.tid) break;
-			}
+			var task = gantticc.project.getTask(data.tid);
+			if (task == null) return;
 			if (data.start) task.start = data.start;
 			if (data.end) task.end = data.end;
 			if (data.row) task.row = data.row;
-			save_tasks();
+			gantticc.project.saveTasks();
 		});
 		gchart.on('message:new_task', function(data){
-			gntasks.push(data.task);
-			save_tasks();
+			gantticc.project.addTask(data.task);
 		});
 		gchart.on('message:scroll_date', function(data){
 			var cur = new Date(data.date);
-			$('#mtab').text( getLiteralMonth([cur.getMonth()]) );
-			$('#mtab').attr('value', cur.toISOString());
+			gantticc.updateCurrentMonthBtn(cur);
 		});
 	});
 	
@@ -501,19 +511,13 @@ cursor:default;
 		});
 	});
 	
-	function init_project(){
-		init_env();
-		update_mtab();
-		get_project();
-	}
-	
 	function task_form_delete(){
 		gchart.sendMessage('update_task',{
 			tid: $('#title_tid').val(),
 			delete: 'true'
 		});
 		$('#task_form').hide();
-		delete_task($('#title_tid').val());
+		gantticc.project.deleteTask($('#title_tid').val());
 	}
 	
 	function task_form_cancel(){
@@ -525,76 +529,80 @@ cursor:default;
 	}
 	
 	function task_form_submit(){
-		var task;
-		var tid = $('#title_tid').val();
-		for (var i=0; i<gntasks.length; i++){
-			task = gntasks[i];
-			if (task.tid == tid) break;
-		}
+		var task = gantticc.project.getTask($('#title_tid').val());
+		if (task == null) return;
 		task.title = $('#title_txtfield').val();
 		task.color = $('#task_color').val();
 		task.notes = $('#notes_txtfield').val();
 		gchart.sendMessage('update_task',{
-			tid: tid,
+			tid: task.tid,
 			title: task.title,
 			color: task.color,
 			notes: task.notes
 		});
 		$('#task_form').hide();
-		save_tasks();
+		gantticc.project.saveTasks();
 	}
 	
 	function task_form_set_color(color){
-		for (var i=0; i<gncolors.length; i++){
-			var c = gncolors[i];
+		for (var i=0; i<gantticc.colors.length; i++){
+			var c = gantticc.colors[i];
 			$('#task_color_'+c).removeClass('swatch_sel');
 		}
 		$('#task_color_'+color).addClass('swatch_sel');
 		$('#task_color').val(color);
 	}
 	
-	function project_entry_submit(){
+	function project_update(){
 		var startdate = new Date($('#project_startdate').val()).toISOString();
 		var enddate = new Date($('#project_enddate').val()).toISOString();
 		gchart.sendMessage('update_project',{
 			start_date: startdate,
 			end_date: enddate
 		});
-		gnproject.title = $('#project_title_txtfield').val();
-		gnproject.start = startdate;
-		gnproject.end = enddate;
-		save_project();
+		gantticc.project.title = $('#project_title_txtfield').val();
+		gantticc.project.start = startdate;
+		gantticc.project.end = enddate;
+		gantticc.project.save();
+		gantticc.project.saveTasks();
 		// make sure mtab is within scale
 		var current = new Date($('#mtab').attr('value'));
 		var to = current;
-		if (current < new Date($('#project_startdate').val())){
-			to = new Date($('#project_startdate').val());
+		if (current < new Date(gantticc.project.start)){
+			to = new Date(gantticc.project.start);
+			gchart_scroll(to);
+		} else if (current > new Date(gantticc.project.end)){
+			to = new Date(gantticc.project.end);
 			gchart_scroll(to);
 		}
-		else if (current > new Date($('#project_enddate').val())){
-			to = new Date($('#project_enddate').val());
-			gchart_scroll(to);
+		gantticc.updateJumpMonthMenu();
+		gantticc.updateProjectList();
+	}
+	
+	function delete_cur_project(){
+		gantticc.deleteCurrentProject();
+		gantticc.applyCurrentProject();
+		gchart.sendMessage('init_tasks',{
+			tasks: gantticc.project.tasks
+		});
+	}
+	
+	function project_new(){
+		if (gantticc.addNewProject() == null) {
+			alert("Cannot create more than "+gantticc.maxProjCount+" projects.");
+			return;
 		}
-		$('#mtab').text( getLiteralMonth(to.getMonth()) );
-		$('#mtab').attr('value', to.toISOString());
-		// generate a list of months to jump to directly
-		var months = [];
-		var start = new Date($('#project_startdate').val());
-		var end = new Date($('#project_enddate').val());
-		for (var y=start.getFullYear(); y<=end.getFullYear(); y++){
-			if (y != start.getFullYear()){
-				months.push("<li class=\"disabled\">"+"<a>"+y+"</a></li>");
-			}
-			var endMonth = (y == end.getFullYear()) ? end.getMonth() : 11;
-			var startMonth = (y == start.getFullYear()) ? start.getMonth() : 0;
-			for (var m=startMonth; m <= endMonth; m++){
-				var startDay = (months.length > 0) ? 1 : start.getDate();
-				var btn = "<li><a href=\"#\" onclick=\"gchart_scroll(new Date("+y+","+m+","+startDay+"))\">";
-				btn += getLiteralMonth(m)+"</a></li>";
-				months.push(btn);
-			}
-		}
-		$('#mselects').html( months.join('') );
+		gantticc.applyCurrentProject();
+		gchart.sendMessage('init_tasks',{
+			tasks: gantticc.project.tasks
+		});
+	}
+	
+	function project_load(pid){
+		gantticc.setCurrentProject(pid);
+		gchart.sendMessage('init_tasks',{
+			tasks: gantticc.project.tasks
+		});
 	}
 	
 	function gchart_jump(dir){
@@ -616,49 +624,31 @@ cursor:default;
 			}
 		}
 		var to = new Date(y,m,1);
-		var start = new Date($('#project_startdate').val());
-		var end = new Date($('#project_enddate').val());
+		var start = new Date(gantticc.project.start);
+		var end = new Date(gantticc.project.end);
 		if (to > end) return;
 		if (to < start){
 			// jump to first day of project
 			to = start;
 		}
 		gchart_scroll(to);
-		$('#mtab').text( getLiteralMonth(to.getMonth()) );
-		$('#mtab').attr('value', to.toISOString());
+		gantticc.updateCurrentMonthBtn(to);
 	}
 	
 	function gchart_scroll(date){
 		gchart.sendMessage('scroll_to_date',{
 			date: date.toISOString()
 		});
-		$('#mtab').text( getLiteralMonth(date.getMonth()) );
-		$('#mtab').attr('value', date.toISOString());
+		gantticc.updateCurrentMonthBtn(date);
 		$('#mselects').hide();
 	}
 	
-	function delete_everything(){
-		gnproject ={ };
-		gntasks.length = 0;
-		localStorage.removeItem('project');
-		localStorage.removeItem('tasks');
-		get_tasks();
-		get_project();
-		gchart.sendMessage('init_tasks',{
-			tasks: gntasks
-		});
-	}
-
 	function set_scale(unit){
-		var startdate = new Date($('#project_startdate').val()).toISOString();
-		var enddate = new Date($('#project_enddate').val()).toISOString();
-		// just send message
 		gchart.sendMessage('set_scale',{
 			unit: unit,
-			start_date: startdate,
-			end_date: enddate
+			start_date: gantticc.project.start,
+			end_date: gantticc.project.end
 		});
-		update_mtab();
 	}
 	
 	function toggle_swatch_color(color){
