@@ -9,7 +9,6 @@
 	<script type="text/javascript" src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="js/bootstrap-datepicker.js"></script>
 	<script type="text/javascript" src="js/gantticc.js"></script>
-	<script type="text/javascript" src="js/d3.v3.min.js"></script>
 	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<link rel="stylesheet" href="css/datepicker.css">
 </head>
@@ -63,7 +62,7 @@ display:none;
 z-index:1;
 overflow-y:hidden;
 overflow-x:hidden;
-min-height:300px;
+min-height:360px;
 }
 #task_form{
 display:none;
@@ -428,18 +427,25 @@ stroke-width:2px;
 			});
 			stage.on('message:update_project', function(data){
 				if ((typeof data.start_date) != 'undefined'){
+					var scroll_date = new Date();
+					if (data.scroll_date) {
+						scroll_date = new Date(data.scroll_date);
+					}
 					// redraw header with new dates
 					gchart.drawHeader(data.start_date, data.end_date);
-					// scroll to today
-					gchart.scrollToDate(new Date());
+					gchart.scrollToDate(scroll_date);
 					gchart.updateCurrentUnit();
 				}
 			});
 			stage.on('message:init_tasks', function(data){
+				var scroll_date = new Date();
+				if (data.no_scroll) {
+					scroll_date = gchart.getScrollDate();
+				}
 				gchart.initTasks(data.tasks);
-				gchart.scrollToDate(new Date());
+				gchart.scrollToDate(scroll_date);
 				// update jump to month button
-				stage.sendMessage('scroll_date', {date: new Date()});
+				stage.sendMessage('scroll_date', {date: scroll_date});
 			});
 			stage.on('message:init_heatmap', function(data){
 				// preserve current scroll position
@@ -449,7 +455,7 @@ stroke-width:2px;
 				gchart.initHeatMap(data.data);
 				gchart.scrollToDate(scrollDate);
 				// update jump to month button
-				stage.sendMessage('scroll_date', {date: new Date()});
+				stage.sendMessage('scroll_date', {date: scrollDate});
 			});
 			stage.on('message:scroll_to_date', function(data){
 				var date = new Date(data.date);
@@ -630,6 +636,8 @@ stroke-width:2px;
 		gchart.sendMessage('init_tasks',{
 			tasks: gantticc.project.tasks
 		});
+		$('#heatmap_status').html('Heat Map');
+		$('#heatmap_status').attr('value', '');
 	}
 	
 	function gchart_jump(dir){
@@ -653,6 +661,10 @@ stroke-width:2px;
 		var to = new Date(y,m,1);
 		var start = new Date(gantticc.project.start);
 		var end = new Date(gantticc.project.end);
+		if (gantticc.heatmap.start) {
+			if (start > gantticc.heatmap.start) start = gantticc.heatmap.start;
+			if (end < gantticc.heatmap.end) end = gantticc.heatmap.end;
+		}
 		if (to > end) return;
 		if (to < start){
 			// jump to first day of project
@@ -703,22 +715,37 @@ stroke-width:2px;
 	}
 	
 	function project_heatmap(){
+		// Handle UI events
 		if ($('#heatmap_status').attr('value') === "on") {
 			$('#heatmap_status').html('Heat Map');
 			$('#heatmap_status').attr('value', '');
-			project_load(gantticc.project.pid);
+			var scrollTo = new Date($('#mtab').attr('value'));
+			if (scrollTo < new Date(gantticc.project.start)) {
+				scrollTo = new Date(gantticc.project.start);
+			}
+			gchart.sendMessage('update_project',{
+				start_date: gantticc.project.start,
+				end_date: gantticc.project.end,
+				scroll_date: scrollTo
+			});
+			gchart.sendMessage('init_tasks',{
+				tasks: gantticc.project.tasks,
+				no_scroll: true
+			});
+			gantticc.updateJumpMonthMenu();
+			gantticc.updateCurrentMonthBtn(scrollTo);
+			gantticc.heatmap = {};
 			return;
 		} else {
 			$('#heatmap_status').html('<b>Heat Map</b>');
 			$('#heatmap_status').attr('value', 'on');
 		}
 		
-		// Generate nice data for plotting
 		// 1. Get the start/end date by looking at all projects
 		var start = new Date(gantticc.project.start).getTime();
 		var end = new Date(gantticc.project.end).getTime();
 		for (var i=0; i<gantticc.projects.length; i++){
-			var prj = gantticc.projects[0];
+			var prj = gantticc.projects[i];
 			var a = new Date(prj.start).getTime();
 			var b = new Date(prj.end).getTime();
 			if (start > a) start = a;
@@ -758,6 +785,13 @@ stroke-width:2px;
 			end_date: new Date(end).toISOString(),
 			data: theData
 		});
+		
+		gantticc.heatmap = {
+			start: new Date(start),
+			end: new Date(end)
+		}
+		gantticc.updateJumpMonthMenu(gantticc.heatmap.start.toISOString(),
+									gantticc.heatmap.end.toISOString());
 	}
 	
 </script>

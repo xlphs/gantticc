@@ -131,6 +131,9 @@ gantticc.init = function(){
 		gantticc.localstorage = 0;
 	}
 	
+	// Heat Map overrides
+	gantticc.heatmap = {}
+	
 	// Load/prepare projects
 	gantticc.projects = [];
 	gantticc.project = null;
@@ -258,11 +261,13 @@ gantticc.updateCurrentMonthBtn = function(date){
 	$('#mtab').attr('value', date.toISOString());
 };
 
-gantticc.updateJumpMonthMenu = function(){
+gantticc.updateJumpMonthMenu = function(start_date, end_date){
 	// generate a list of months to jump to directly
+	if (!start_date) start_date = gantticc.project.start;
+	if (!end_date) end_date = gantticc.project.end;
 	var months = [];
-	var start = new Date(gantticc.project.start);
-	var end = new Date(gantticc.project.end);
+	var start = new Date(start_date);
+	var end = new Date(end_date);
 	for (var y=start.getFullYear(); y<=end.getFullYear(); y++){
 		if (y != start.getFullYear()){
 			months.push("<li class=\"disabled\">"+"<a>"+y+"</a></li>");

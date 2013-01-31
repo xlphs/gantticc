@@ -362,6 +362,7 @@ Gantt.prototype = {
 			ganttClickX = e.x;
 			ganttClickY = e.y;
 			// watch out for double click/tap
+			if (_gantt.mode !== "gantt") return;
 			setTimeout(function() {
 				if (ganttClickCount == 2) {
 					gchart.addNewTask(ganttClickX, ganttClickY);
@@ -784,8 +785,8 @@ Gantt.prototype = {
 			var tt = (parseInt(task.count) == 1) ? " task" : " tasks";
 			_gantt.tooltip.attr('text', task.count+tt);
 			_gantt.tooltip_group.attr({
-				x: e.x+25,
-				y: e.y+5,
+				x: e.x+5,
+				y: e.y-10,
 				visible: true
 			});
 		});
