@@ -564,6 +564,8 @@ stroke-width:2px;
 			cancel: 'true'
 		});
 		$('#task_form').hide();
+		$("#title_txtfield").trigger("blur");
+		$("#notes_txtfield").trigger("blur");
 	}
 	
 	function task_form_submit(){
