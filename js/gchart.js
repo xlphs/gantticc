@@ -86,7 +86,7 @@ function TaskBlock(context, x, task) {
 		this.count = task.count;
 		this.y = task.y;
 		this.dayspan = 1;
-		this.weekspan = null;
+		this.weekspan = 1;
 		this.width = GANTT_DAY_BLK_LEN*this.dayspan;
 		this.startDate = new Date(task.date);
 	} else {
@@ -122,10 +122,13 @@ TaskBlock.prototype = {
 		var colorHex = gantticc[_task.color][0];
 		var bg;
 		if (_task.count) {
+			// orange for total, blue for project
+			// 60 = GANTT_TASK_BLK_HGT * 2
+			var colorRgb = (_task.y == 60) ? "rgb(240,88,13)" : "rgb(49,130,189)";
 			group.attr('cursor', "default");
 			bg = new Rect(0, 0, GANTT_DAY_BLK_LEN*span, GANTT_TASK_BLK_HGT)
-				.attr('filters', new filter.Opacity(0.1*parseInt(_task.count)))
-				.fill(color.parse("rgb(49,130,189)"))
+				.attr('filters', new filter.Opacity( gchart.getHeatMapColorOpacity(parseInt(_task.count)) ))
+				.fill(color.parse(colorRgb))
 				.addTo(group);
 			_task.bg_asset = bg;
 			group.on('mouseover', function(e){
@@ -256,6 +259,7 @@ TaskBlock.prototype = {
 		return Math.floor(diff/7) + 1;
 	},
 	updateSpan: function(unit) {
+		if (this.count) return;
 		if (this.weekspan === null) {
 			if (unit === "day") return;
 			this.weekspan = this.dayspan / 7;
@@ -746,9 +750,15 @@ Gantt.prototype = {
 			_gantt.body.clear();
 		}
 		if ((typeof data) == 'undefined') return;
+		
 		_gantt.leftbar_titles.clear();
-		for (var i=0; i < data.length; i++) {
-			var arr = data[i];
+		_gantt.heatmap = {
+			min: parseInt(data.min),
+			max: parseInt(data.max)
+		};
+		var projects = data.projects;
+		for (var i=0; i < projects.length; i++) {
+			var arr = projects[i];
 			// create project title
 			var y_pos = (i+1)*60+8;
 			if (OFFSET_TXT_VERT_ALIGN) y_pos += 13;
@@ -765,10 +775,6 @@ Gantt.prototype = {
 				var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.date));
 				var tb = new TaskBlock(_gantt.body, x_pos, t);
 				gantticc.tasks.push(tb);
-				// correct span
-				if (_gantt.unit === "week") {
-					tb.updateSpan(_gantt.unit);
-				}
 			}
 		}
 		// reset vertical scroll
@@ -781,24 +787,29 @@ Gantt.prototype = {
 				.addTo(_gantt.tooltip_group)
 				.attr({
 					fontFamily: 'Helvetica, sans-serif',
-					fontSize: '14px',
-					textFillColor: 'black'
+					fontSize: '16px',
+					textFillColor: gantticc.header_color[0]
 				});
 		}
 		stage.on('heatmapblkmsover', function(task, e){
-			// TODO: show statistic in week mode
-			if (_gantt.unit === "week") return;
 			var tt = (parseInt(task.count) == 1) ? " task" : " tasks";
 			_gantt.tooltip.attr('text', task.count+tt);
 			_gantt.tooltip_group.attr({
-				x: e.x+5,
-				y: e.y-10,
+				x: e.x,
+				y: task.y-15,
 				visible: true
 			});
 		});
 		stage.on('heatmapblkmsout', function(task, e){
 			_gantt.tooltip_group.attr('visible', false);
 		});
+	},
+	// @param count: should be an int
+	getHeatMapColorOpacity: function(count){
+		if (!this.heatmap.min && !this.heatmap.max) return;
+		var q = (this.heatmap.max - this.heatmap.min)/10; // 10 is number of quantiles
+		var val = (count / this.heatmap.max) * q;
+		return val;
 	},
 	// @param anim: set to 1 to render animation
 	scrollX: function(x_offset, anim) {

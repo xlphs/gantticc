@@ -80,26 +80,44 @@ Project.prototype = {
 	},
 	getTasksOnDate: function(date){
 		var tasks = [];
+		var d = date.getTime();
 		for (var i=0; i<this.tasks.length; i++) {
 			var t = this.tasks[i];
 			var start = new Date(t.start).getTime();
 			var end = new Date(t.end).getTime();
-			var d = date.getTime();
 			if (start <= d && end >= d) {
 				tasks.push($.extend(true, {}, t)); // return copy
 			}
 		}
 		return tasks;
 	},
-	getDataForHeatMap: function(){
+	getTasksInWeek: function(w){
+		var tasks = [];
+		for (var i=0; i<this.tasks.length; i++) {
+			var t = this.tasks[i];
+			var date = new Date(t.start);
+			var wn = date.getWeekNumber(date);
+			if (wn == w) {
+				tasks.push($.extend(true, {}, t)); // return copy
+			}
+		}
+		return tasks;
+	},
+	getDataForHeatMap: function(unit){
 		var data = [];
 		var start = new Date(this.start).getTime();
 		var end = new Date(this.end).getTime();
-		for (var t=start; t<=end; t+=1000*3600*24) {
-			data.push({
-				date: t,
-				tasks: this.getTasksOnDate(new Date(t))
-			});
+		var incTime = 1000*3600*24;
+		if (unit === "week") incTime = incTime * 7; // 7 days a week
+		for (var t=start; t<=end; t+=incTime) {
+			var tasks;
+			var date = new Date(t);
+			if (unit === "day") {
+				tasks = this.getTasksOnDate(date);
+			} else {
+				tasks = this.getTasksInWeek(date.getWeekNumber(date));
+			}
+			data.push({ date: t, tasks: tasks });
 		}
 		return data;
 	}
@@ -162,7 +180,7 @@ gantticc.init = function(){
 			gantticc.projects.push(gantticc.project);
 		}
 	} else {
-		gantticc.project = new Project(-1);
+		gantticc.project = new Project();
 	}
 };
 
@@ -353,6 +371,14 @@ gantticc.getAllTasksOnDate = function(date){
 	return arr;
 };
 
+gantticc.getAllTasksInWeek = function(weekNum){
+	var arr = [];
+	for (var i=0; i<gantticc.projects.length; i++) {
+		$.merge(arr, gantticc.projects[i].getTasksInWeek(weekNum));
+	}
+	return arr;
+};
+
 gantticc.getWidth = function(){
 	if (gantticc.print) {
 		var a = new Date(gantticc.project.start).getTime();
@@ -370,4 +396,22 @@ gantticc.getHeight = function(){
 	} else {
 		return $(document).height()-$('#topbar').height()-7;
 	}
+};
+
+Date.prototype.getWeekNumber = function(d) {
+	/* For a given date, get the ISO week number
+	* Based on information at:
+	*    http://www.merlyn.demon.co.uk/weekcalc.htm#WNR
+	*/
+	// Copy date so don't modify original
+	d = new Date(d);
+	d.setHours(0,0,0);
+	// Set to nearest Thursday: current date + 4 - current day number
+	// Make Sunday's day number 7
+	d.setDate(d.getDate() + 4 - (d.getDay()||7));
+	// Get first day of year
+	var yearStart = new Date(d.getFullYear(),0,1);
+	// Calculate full weeks to nearest Thursday
+	var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+	return weekNo;
 };

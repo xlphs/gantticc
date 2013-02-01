@@ -465,9 +465,18 @@ stroke-width:2px;
 				stage.on('message:init_heatmap', function(data){
 					// preserve current scroll position
 					var scrollDate = gchart.getScrollDate();
+					// check unit
+					if (gchart.unit !== data.unit) {
+						gchart.unit = data.unit;
+					}
 					// redraw header with new dates
 					gchart.drawHeader(data.start_date, data.end_date);
-					gchart.initHeatMap(data.data);
+					gchart.updateCurrentUnit(1);
+					gchart.initHeatMap({
+						min: data.min,
+						max: data.max,
+						projects: data.data
+					});
 					gchart.scrollToDate(scrollDate);
 					// update jump to month button
 					stage.sendMessage('scroll_date', {date: scrollDate});
@@ -480,17 +489,18 @@ stroke-width:2px;
 					gchart.highlightTaskByColor(data.color, data.status);
 				});
 				stage.on('message:set_scale', function(data){
+					var scrollDate = new Date();
 					if (gchart.unit === data.unit){
 						// jump to today if no change
-						var date = new Date();
-						gchart.scrollToDate(date);
+						gchart.scrollToDate(scrollDate);
+					} else {
+						// preserve current scroll position
+						scrollDate = gchart.getScrollDate();
+						gchart.unit = data.unit;
+						gchart.drawHeader(data.start_date, data.end_date);
+						gchart.updateCurrentUnit(1);
+						gchart.scrollToDate(scrollDate);
 					}
-					// preserve current scroll position
-					var scrollDate = gchart.getScrollDate();
-					gchart.unit = data.unit;
-					gchart.drawHeader(data.start_date, data.end_date);
-					gchart.updateCurrentUnit(1);
-					gchart.scrollToDate(scrollDate);
 					// update jump to month button
 					stage.sendMessage('scroll_date', {date: scrollDate});
 				});
@@ -698,8 +708,8 @@ stroke-width:2px;
 		var start = gantticc.project.start;
 		var end = gantticc.project.end;
 		if (gantticc.heatmap.start) {
-			start = gantticc.heatmap.start;
-			end = gantticc.heatmap.end;
+			project_heatmap(unit, 1);
+			return;
 		}
 		gchart.sendMessage('set_scale',{
 			unit: unit,
@@ -731,32 +741,36 @@ stroke-width:2px;
 		}
 	}
 	
-	function project_heatmap(){
+	function project_heatmap(unit, update){
 		// Handle UI events
-		if ($('#heatmap_status').attr('value') === "on") {
-			gantticc.resetHeatmap();
-			var scrollTo = new Date($('#mtab').attr('value'));
-			if (scrollTo < new Date(gantticc.project.start)) {
-				scrollTo = new Date(gantticc.project.start);
+		if (!update) {
+			if ($('#heatmap_status').attr('value') === "on") {
+				gantticc.resetHeatmap();
+				var scrollTo = new Date($('#mtab').attr('value'));
+				if (scrollTo < new Date(gantticc.project.start)) {
+					scrollTo = new Date(gantticc.project.start);
+				}
+				gchart.sendMessage('update_project',{
+					start_date: gantticc.project.start,
+					end_date: gantticc.project.end,
+					scroll_date: scrollTo
+				});
+				gchart.sendMessage('init_tasks',{
+					tasks: gantticc.project.tasks,
+					no_scroll: true
+				});
+				gantticc.resetSwatch();
+				gantticc.updateJumpMonthMenu();
+				gantticc.updateCurrentMonthBtn(scrollTo);
+				gantticc.heatmap = {};
+				return;
+			} else {
+				$('#heatmap_status').html('<b>Heat Map</b>');
+				$('#heatmap_status').attr('value', 'on');
 			}
-			gchart.sendMessage('update_project',{
-				start_date: gantticc.project.start,
-				end_date: gantticc.project.end,
-				scroll_date: scrollTo
-			});
-			gchart.sendMessage('init_tasks',{
-				tasks: gantticc.project.tasks,
-				no_scroll: true
-			});
-			gantticc.resetSwatch();
-			gantticc.updateJumpMonthMenu();
-			gantticc.updateCurrentMonthBtn(scrollTo);
-			gantticc.heatmap = {};
-			return;
-		} else {
-			$('#heatmap_status').html('<b>Heat Map</b>');
-			$('#heatmap_status').attr('value', 'on');
 		}
+		
+		if (!unit) unit = "day";
 		
 		// 1. Get the start/end date by looking at all projects
 		var start = new Date(gantticc.project.start).getTime();
@@ -768,16 +782,22 @@ stroke-width:2px;
 			if (start > a) start = a;
 			if (end < b) end = b;
 		}
-		// 2. For each day, compute the number of tasks
+		// 2. For each day/week, compute the number of tasks
 		var theData = [],
 			totalData = [],
-			max = 0;
-		for (var t=start; t<=end; t+=1000*3600*24) {
-			var data = {
-				date: t,
-				tasks: gantticc.getAllTasksOnDate(new Date(t))
-			};
-			if (max < data.tasks.length) max = data.tasks.length;
+			max = 0,
+			incTime = 1000*3600*24;
+		if (unit === "week") incTime = incTime * 7; // 7 days a week
+		for (var t=start; t<=end; t+=incTime) {
+			var tasks;
+			var date = new Date(t);
+			if (unit === "day") {
+				tasks = gantticc.getAllTasksOnDate(date);
+			} else {
+				tasks = gantticc.getAllTasksInWeek(date.getWeekNumber(date));
+			}
+			var data = { date: t, tasks: tasks };
+			if (max < tasks.length) max = tasks.length;
 			totalData.push(data);
 		}
 		max++;
@@ -787,20 +807,19 @@ stroke-width:2px;
 			var prj = gantticc.projects[i];
 			var data = {
 				title: prj.title,
-				data: prj.getDataForHeatMap()
+				data: prj.getDataForHeatMap(unit)
 			}
 			projectsData.push(data);
 		}
-		theData = [{
-			title: "Total",
-			data: totalData
-		}];
+		theData = [{ title: "Total", data: totalData }];
 		$.merge(theData, projectsData);
 		
 		gchart.sendMessage('init_heatmap',{
 			start_date: new Date(start).toISOString(),
 			end_date: new Date(end).toISOString(),
-			data: theData
+			unit: unit,
+			data: theData,
+			min: 0, max: max
 		});
 		
 		gantticc.heatmap = {
