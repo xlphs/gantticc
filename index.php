@@ -8,6 +8,8 @@
 		<link rel="stylesheet" href="css/bootstrap.min.css">
 	</head>
 	<body>
-		Welcome to Gantticc. <a href="test.html">Take a test drive.</a>
+		<div class="container-fluid" style="margin-top:20%;"><div class="row-fluid" style="text-align:center;">
+			<p>Welcome to Gantticc. <a href="test.html">Take a test drive.</a></p>
+		</div></div>
 	</body>
 <html>

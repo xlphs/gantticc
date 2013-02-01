@@ -3,7 +3,7 @@
 <head>
 	<title>Gantticc Test Drive</title>
 	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" >
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1">
 	<meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1.0">
 	<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
 	<script type="text/javascript" src="js/bootstrap.min.js"></script>
@@ -324,6 +324,7 @@ stroke-width:2px;
 		<h3>Help</h3>
 	</div>
 	<div class="modal-body">
+		<p>If you find any issues, you can submit them to this project's <a href="https://github.com/xlphs/gantticc">github page</a>.</p>
 		<h4>Tasks</h4>
 		<ul>
 			<li>To create, double click on empty space.</li>
@@ -335,9 +336,11 @@ stroke-width:2px;
 		<ul>
 			<li>Click and drag the background to scroll.</li>
 		</ul>
-		<h4>Side note:</h4>
+		<h4>Hot Keys</h4>
 		<ul>
-			<li>Switch to/from heat map mode by pressing "h".</li>
+			<li><code>h</code>: switch to/from heat map mode.</li>
+			<li><code>d</code>: set unit to day, and/or jump to today.</li>
+			<li><code>w</code>: set unit to week, and/or jump to current week.</li>
 		</ul>
 	</div>
 	<div class="modal-footer">
@@ -376,14 +379,20 @@ stroke-width:2px;
 				msel.hide();
 			}
 		});
-		$(document).on('keydown', function(e) {
+		$(document).on('keydown', function(e){
 			if (e.keyCode == 27) {
 				// listen for escape
 				if ($('#task_form').is(':visible')) task_form_cancel();
 				if ($('#mselects').is(':visible')) $('#mselects').hide();
 			} else if (e.keyCode == 72) {
-				// listen for heatmap hotkey
+				// listen for heatmap hotkey "h"
 				if (gantticc.listenKey && !$('#task_form').is(':visible')) project_heatmap();
+			} else if (e.keyCode == 68) {
+				// switch to day mode "d"
+				if (gantticc.listenKey && !$('#task_form').is(':visible')) set_scale("day");
+			} else if (e.keyCode == 87) {
+				// switch to week mode "d"
+				if (gantticc.listenKey && !$('#task_form').is(':visible')) set_scale("week");
 			}
 		});
 		// handle keydown event or not
@@ -446,7 +455,6 @@ stroke-width:2px;
 						if (data.scroll_date) {
 							scroll_date = new Date(data.scroll_date);
 						}
-						// redraw header with new dates
 						gchart.drawHeader(data.start_date, data.end_date);
 						gchart.scrollToDate(scroll_date);
 						gchart.updateCurrentUnit();
@@ -469,7 +477,6 @@ stroke-width:2px;
 					if (gchart.unit !== data.unit) {
 						gchart.unit = data.unit;
 					}
-					// redraw header with new dates
 					gchart.drawHeader(data.start_date, data.end_date);
 					gchart.updateCurrentUnit(1);
 					gchart.initHeatMap({
@@ -510,14 +517,12 @@ stroke-width:2px;
 	
 		gchart.on('load', function(data){
 			gchart.on('message:ready', function(data){
-				// send the dates to gchart
 				var startdate = new Date($('#project_startdate').val()).toISOString();
 				var enddate = new Date($('#project_enddate').val()).toISOString();
 				gchart.sendMessage('update_project',{
 					start_date: startdate,
 					end_date: enddate
 				});
-				// send tasks to gchart
 				gchart.sendMessage('init_tasks',{
 					tasks: gantticc.project.tasks
 				});
@@ -769,9 +774,7 @@ stroke-width:2px;
 				$('#heatmap_status').attr('value', 'on');
 			}
 		}
-		
 		if (!unit) unit = "day";
-		
 		// 1. Get the start/end date by looking at all projects
 		var start = new Date(gantticc.project.start).getTime();
 		var end = new Date(gantticc.project.end).getTime();
@@ -800,7 +803,7 @@ stroke-width:2px;
 			if (max < tasks.length) max = tasks.length;
 			totalData.push(data);
 		}
-		max++;
+		max++; // for max opacity 0.9 so that grid lines remain visible
 		// 3. For each project, generate data for plotting
 		var projectsData = [];
 		for (var i=0; i<gantticc.projects.length; i++){
@@ -821,7 +824,6 @@ stroke-width:2px;
 			data: theData,
 			min: 0, max: max
 		});
-		
 		gantticc.heatmap = {
 			start: new Date(start).toISOString(),
 			end: new Date(end).toISOString()
