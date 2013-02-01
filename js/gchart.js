@@ -768,6 +768,9 @@ Gantt.prototype = {
 				}
 			}
 		}
+		// reset vertical scroll
+		this.y = 0;
+		this.body.attr('y', this.y);
 		// add tooltip to stage (floating)
 		if (!_gantt.tooltip_group) {
 			_gantt.tooltip_group = new Group().addTo(stage).attr('visible', false);
