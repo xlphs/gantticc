@@ -657,8 +657,10 @@ stroke-width:2px;
 		var start = new Date(gantticc.project.start);
 		var end = new Date(gantticc.project.end);
 		if (gantticc.heatmap.start) {
-			if (start > gantticc.heatmap.start) start = gantticc.heatmap.start;
-			if (end < gantticc.heatmap.end) end = gantticc.heatmap.end;
+			var a = new Date(gantticc.heatmap.start);
+			var b = new Date(gantticc.heatmap.end);
+			if (start > a) start = a;
+			if (end < b) end = b;
 		}
 		if (to > end) return;
 		if (to < start){
@@ -678,10 +680,16 @@ stroke-width:2px;
 	}
 	
 	function set_scale(unit){
+		var start = gantticc.project.start;
+		var end = gantticc.project.end;
+		if (gantticc.heatmap.start) {
+			start = gantticc.heatmap.start;
+			end = gantticc.heatmap.end;
+		}
 		gchart.sendMessage('set_scale',{
 			unit: unit,
-			start_date: gantticc.project.start,
-			end_date: gantticc.project.end
+			start_date: start,
+			end_date: end
 		});
 	}
 	
@@ -784,11 +792,10 @@ stroke-width:2px;
 		});
 		
 		gantticc.heatmap = {
-			start: new Date(start),
-			end: new Date(end)
+			start: new Date(start).toISOString(),
+			end: new Date(end).toISOString()
 		}
-		gantticc.updateJumpMonthMenu(gantticc.heatmap.start.toISOString(),
-									gantticc.heatmap.end.toISOString());
+		gantticc.updateJumpMonthMenu(gantticc.heatmap.start, gantticc.heatmap.end);
 	}
 	
 </script>
