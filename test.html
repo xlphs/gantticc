@@ -360,15 +360,14 @@ stroke-width:2px;
 		});
 		$(".datepickr").on('changeDate', function(e){
 			$(e.target).datepicker('hide');
-		})
+		});
 		// setup tooltips
 		$('a[rel=tooltip]').tooltip();
 		// setup jump-to-month dropdown
 		$('#mtab').on('click', function(){
 			var x = $('#mtab').offset().left;
 			var y = $('#mtab').offset().top;
-			$('#mselects').css('left', x);
-			$('#mselects').css('top', y+2);
+			$('#mselects').css({ left: x, top: y+2 });
 			$('#mselects').show();
 		});
 		$(document).bind('mouseup touchstart', function(e){
@@ -377,12 +376,13 @@ stroke-width:2px;
 				msel.hide();
 			}
 		});
-		// listen for escape to cancel task editing
 		$(document).on('keydown', function(e) {
 			if (e.keyCode == 27) {
+				// listen for escape
 				if ($('#task_form').is(':visible')) task_form_cancel();
+				if ($('#mselects').is(':visible')) $('#mselects').hide();
 			} else if (e.keyCode == 72) {
-				// h
+				// listen for heatmap hotkey
 				if (gantticc.listenKey && !$('#task_form').is(':visible')) project_heatmap();
 			}
 		});
@@ -528,8 +528,7 @@ stroke-width:2px;
 				$('#notes_txtfield').val(task.notes);
 				var y_pos = data.y+$('#topbar').height();
 				if ( !$('#settings').is(":hidden") ) y_pos += $('#settings').height();
-				$('#task_form').css('top', y_pos);
-				$('#task_form').css('left', data.x);
+				$('#task_form').css({ top: y_pos, left: data.x });
 				$('#task_form').show();
 			});
 			gchart.on('message:update_task', function(data){
@@ -724,12 +723,10 @@ stroke-width:2px;
 	
 	function toggle_settings(){
 		if ( $('#settings').is(":hidden") ){
-			$('#settings_toggler').removeClass("icon-arrow-down");
-			$('#settings_toggler').addClass("icon-arrow-up");
+			$('#settings_toggler').removeClass("icon-arrow-down").addClass("icon-arrow-up");
 			$('#settings').slideDown();
 		} else{
-			$('#settings_toggler').addClass("icon-arrow-down");
-			$('#settings_toggler').removeClass("icon-arrow-up");
+			$('#settings_toggler').addClass("icon-arrow-down").removeClass("icon-arrow-up");
 			$('#settings').slideUp();
 		}
 	}
@@ -737,8 +734,7 @@ stroke-width:2px;
 	function project_heatmap(){
 		// Handle UI events
 		if ($('#heatmap_status').attr('value') === "on") {
-			$('#heatmap_status').html('Heat Map');
-			$('#heatmap_status').attr('value', '');
+			gantticc.resetHeatmap();
 			var scrollTo = new Date($('#mtab').attr('value'));
 			if (scrollTo < new Date(gantticc.project.start)) {
 				scrollTo = new Date(gantticc.project.start);

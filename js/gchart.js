@@ -735,6 +735,8 @@ Gantt.prototype = {
 				tb.updateSpan(this.unit);
 			}
 		}
+		// make sure tooltip is hidden
+		if (this.tooltip_group) this.tooltip_group.attr('visible', false);
 	},
 	initHeatMap: function(data){
 		var _gantt = this;
