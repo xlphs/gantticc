@@ -130,7 +130,8 @@ gantticc.init = function(){
 		console.log("Error: local storage not supported!");
 		gantticc.localstorage = 0;
 	}
-	gantticc.listenKey = false;
+	// listen/handle key presses
+	gantticc.listenKey = true;
 	
 	// Heat Map overrides
 	gantticc.heatmap = {}
