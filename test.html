@@ -631,8 +631,8 @@ stroke-width:2px;
 		gchart.sendMessage('init_tasks',{
 			tasks: gantticc.project.tasks
 		});
-		$('#heatmap_status').html('Heat Map');
-		$('#heatmap_status').attr('value', '');
+		gantticc.resetHeatmap();
+		gantticc.resetSwatch();
 	}
 	
 	function gchart_jump(dir){

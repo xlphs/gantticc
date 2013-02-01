@@ -738,47 +738,45 @@ Gantt.prototype = {
 	},
 	initHeatMap: function(data){
 		var _gantt = this;
-		this.mode = "heatmap";
+		_gantt.mode = "heatmap";
 		if (gantticc.tasks.length > 0) {
 			gantticc.tasks.length = 0;
 			_gantt.body.clear();
 		}
 		if ((typeof data) == 'undefined') return;
-		this.leftbar_titles.clear();
+		_gantt.leftbar_titles.clear();
 		for (var i=0; i < data.length; i++) {
 			var arr = data[i];
 			// create project title
 			var y_pos = (i+1)*60+8;
 			if (OFFSET_TXT_VERT_ALIGN) y_pos += 13;
-			var title = new Text(arr.title).addTo(this.leftbar_titles)
-				.attr({
-					x: 0, y: y_pos,
-					fontFamily: 'Helvetica, sans-serif',
-					fontSize: '18px',
-					textFillColor: color.parse(gantticc.header_color[0])
-				});
+			var title = new HeatMapTitle(_gantt.leftbar_titles, arr.title, {
+				x: 0, y: y_pos,
+				width: GANTT_UNIT_INDT_LEN-3,
+				height: GANTT_TASK_BLK_HGT
+			});
 			for (var j=0; j<arr.data.length; j++) {
 				var t = arr.data[j];
 				t.count = t.tasks.length.toString();
 				t.y = (i+1)*60;
 				// calculate x coordinate
 				var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.date));
-				var tb = new TaskBlock(this.body, x_pos, t);
+				var tb = new TaskBlock(_gantt.body, x_pos, t);
 				gantticc.tasks.push(tb);
 				// correct span
 				if (_gantt.unit === "week") {
-					tb.updateSpan(this.unit);
+					tb.updateSpan(_gantt.unit);
 				}
 			}
 		}
 		// reset vertical scroll
-		this.y = 0;
-		this.body.attr('y', this.y);
+		_gantt.y = 0;
+		_gantt.body.attr('y', _gantt.y);
 		// add tooltip to stage (floating)
 		if (!_gantt.tooltip_group) {
 			_gantt.tooltip_group = new Group().addTo(stage).attr('visible', false);
 			_gantt.tooltip = new Text("0 tasks")
-				.addTo(this.tooltip_group)
+				.addTo(_gantt.tooltip_group)
 				.attr({
 					fontFamily: 'Helvetica, sans-serif',
 					fontSize: '14px',
@@ -896,6 +894,27 @@ Gantt.prototype = {
 				tblk.group_asset.attr({ visible: enable });
 			}
 		}
+	}
+};
+
+function HeatMapTitle(context, text, size) {
+	this.x = size.x;
+	this.y = size.y;
+	this.text = text;
+	this.width = size.width;
+	this.height = size.height;
+	this.show(context);
+}
+
+HeatMapTitle.prototype = {
+	show: function(context) {
+		this.title_asset = new Text(this.text).addTo(context)
+			.attr({
+				x: this.x, y: this.y,
+				fontFamily: 'Helvetica, sans-serif',
+				fontSize: '18px',
+				textFillColor: color.parse(gantticc.header_color[0])
+			});
 	}
 };
 

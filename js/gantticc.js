@@ -171,6 +171,8 @@ gantticc.applyCurrentProject = function(){
 	$("#project_startdate").datepicker('setValue', new Date(gantticc.project.start));
 	$("#project_enddate").datepicker('setValue', new Date(gantticc.project.end));
 	project_update();
+	gantticc.resetSwatch();
+	gantticc.resetHeatmap();
 };
 
 gantticc.loadAllProjects = function(){
@@ -328,6 +330,11 @@ gantticc.resetSwatch = function(){
 		var el = $('.swatch_'+color).next().first();
 		el.addClass('swatch_checked');
 	}
+};
+
+gantticc.resetHeatmap = function(){
+	$('#heatmap_status').html('Heat Map');
+	$('#heatmap_status').attr('value', '');
 };
 
 gantticc.openInNewWind = function(){
