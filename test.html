@@ -480,9 +480,6 @@ stroke-width:2px;
 					// update jump to month button
 					stage.sendMessage('scroll_date', {date: scrollDate});
 				});
-				stage.on('message:resize', function(data){
-					// TODO: resize chart
-				});
 				stage.sendMessage('ready',{});
 			}
 		});
@@ -540,13 +537,6 @@ stroke-width:2px;
 		// apply data into ui
 		gantticc.applyCurrentProject();
 		gantticc.updateProjectList();
-		
-		$(window).on('resize', function(){
-			gchart.sendMessage('resize',{
-				width: $('#controls').width(),
-				height: $(document).height()-$('#topbar').height()-7
-			});
-		});
 	});
 	
 	function task_form_delete(){

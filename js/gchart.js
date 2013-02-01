@@ -11,9 +11,12 @@ var IOS_USER = false;
 if ( (navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPad/i)) ) {
 	IOS_USER = true;
 }
-var FIREFOX_USER = false;
+var OFFSET_TXT_VERT_ALIGN = false;
 if (navigator.userAgent.indexOf("Firefox") != -1) {
-	FIREFOX_USER = true;
+	OFFSET_TXT_VERT_ALIGN = true;
+} else if (navigator.appName == 'Microsoft Internet Explorer') {
+	// Note: IE will display fine, but mouse event hanlding is buggy
+	OFFSET_TXT_VERT_ALIGN = true;
 }
 
 // the top level global context
@@ -51,7 +54,7 @@ DateBlock.prototype = {
 		_dateblk.textAsset = new Text(_dateblk.text).addTo(context);
 		// center the text (text should be an integer)
 		var nudge = (parseInt(_dateblk.text) < 10) ? 13 : 7;
-		var y_pos = (FIREFOX_USER) ? _dateblk.y+13 : _dateblk.y;
+		var y_pos = (OFFSET_TXT_VERT_ALIGN) ? _dateblk.y+13 : _dateblk.y;
 		_dateblk.textAsset.attr({
 			x: _dateblk.x+nudge,
 			y: y_pos,
@@ -163,7 +166,7 @@ TaskBlock.prototype = {
 		
 		var title_x = 8;
 		var title_y = (IOS_USER) ? 8 : 10;
-		if (FIREFOX_USER) title_y += 11;
+		if (OFFSET_TXT_VERT_ALIGN) title_y += 11;
 		
 		if (_task.notes) {
 			_task.addIndicatorIcon(group, 'assets/task_list_16.png', 5, 7, 16, 16);
@@ -311,7 +314,7 @@ function Gantt(x, y) {
 		x: 1,
 		y: 0
 	}).addTo(stage);
-	var y_pos = (FIREFOX_USER) ? 5+13 : 5;
+	var y_pos = (OFFSET_TXT_VERT_ALIGN) ? 5+13 : 5;
 	new Rect(0, 0, GANTT_UNIT_INDT_LEN-2, stage.height)
 	.attr({
 		strokeColor: '#fff',
@@ -746,7 +749,7 @@ Gantt.prototype = {
 			var arr = data[i];
 			// create project title
 			var y_pos = (i+1)*60+8;
-			if (FIREFOX_USER) y_pos += 13;
+			if (OFFSET_TXT_VERT_ALIGN) y_pos += 13;
 			var title = new Text(arr.title).addTo(this.leftbar_titles)
 				.attr({
 					x: 0, y: y_pos,
