@@ -377,8 +377,18 @@ stroke-width:2px;
 		$(document).on('keydown', function(e) {
 			if (e.keyCode == 27) {
 				if ($('#task_form').is(':visible')) task_form_cancel();
+			} else if (e.keyCode == 72) {
+				// h
+				if (gantticc.listenKey && !$('#task_form').is(':visible')) project_heatmap();
 			}
 		});
+		// handle keydown event or not
+		$('input[type=text]')
+		    .bind("focus", function(){ gantticc.listenKey = false; })
+		    .bind("blur", function(){ gantticc.listenKey = true; });
+		$('textarea')
+		    .bind("focus", function(){ gantticc.listenKey = false; })
+		    .bind("blur", function(){ gantticc.listenKey = true; });
 		// setup project info model
 		$('#project_info_modal').on('show', function(){
 			var html = [];
