@@ -139,6 +139,10 @@ gantticc.init = function(){
 	// Max number of projects
 	gantticc.maxProjCount = 5;
 	
+	gantticc.firebaseUrl = "https://gantticc.firebaseio.com/";
+	// TODO: Check if data should be loaded from server
+	// Look for GET parameter fbdb and etc...
+	
 	// Check support for Local Storage
 	gantticc.localstorage = 1;
 	if ((typeof Storage) !== "undefined") {
@@ -395,6 +399,41 @@ gantticc.getHeight = function(){
 		return 500;
 	} else {
 		return $(document).height()-$('#topbar').height()-7;
+	}
+};
+
+gantticc.verifySharingId = function(sId, checkForDup) {
+	var dbRef = new Firebase(gantticc.firebaseUrl+sId);
+	dbRef.on('value', function(snapshot){
+		if (snapshot.val() == null) {
+			if (checkForDup) {
+				return true; // sId is unique
+			}
+		} else {
+			if (!checkForDup) return true; // sId is being used
+		}
+	});
+	return false;
+};
+
+gantticc.setFirebaseId = function(id) {
+	gantticc.fbdbId = id;
+};
+
+gantticc.shareToFirebase = function(prjId){
+	if (!gantticc.fbdbId) return;
+	var dbRef = new Firebase(gantticc.firebaseUrl+gantticc.fbdbId);
+	if (!prjId) {
+		// save all data
+		dbRef.set(gantticc.projects, function(err){
+			if (error) {
+				$('#prj_sharefrm_output').text("Something went wrong while trying to complete your request.");
+				console.log(error);
+			} else {
+				var shareUrl = "http://gantti.cc/test.html?fbdb="+gantticc.fbdbId;
+				$('#prj_sharefrm_output').html('Your sharing url will be: <a href="'+shareUrl+'">'+shareUrl+'</a>');
+			}
+		});
 	}
 };
 

@@ -8,6 +8,7 @@
 	<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
 	<script type="text/javascript" src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="js/bootstrap-datepicker.js"></script>
+	<script src="https://cdn.firebase.com/v0/firebase.js"></script>
 	<script type="text/javascript" src="js/gantticc.js"></script>
 	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<link rel="stylesheet" href="css/datepicker.css">
@@ -219,7 +220,7 @@ stroke-width:2px;
 		<a class="btn" href="#project_info_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="bottom" data-original-title="Project Info">
 			<span class="icon-info-sign"></span>
 		</a>
-		<a class="btn" href="#" onclick="gantticc.openInNewWind();" rel="tooltip" data-placement="bottom" data-original-title="Open in New Window">
+		<a class="btn" href="#project_share_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="bottom" data-original-title="Share">
 			<span class="icon-share-alt"></span>
 		</a>
 	</div></div>
@@ -345,6 +346,30 @@ stroke-width:2px;
 	</div>
 	<div class="modal-footer">
 		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
+	</div>
+</div>
+<div id="project_share_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h3>Project Info</h3>
+	</div>
+	<div class="modal-body">
+		<div class="form-horizontal">
+			<div class="control-group" id="prj_sharefrm_group">
+			<label class="control-label" for="project_share_id">Sharing id: </label>
+			<div class="controls">
+				<input type="text" class="input" name="project_share_id" id="project_share_id" value="" size="12" />
+				<span class="help-inline"></span>
+			</div>
+			</div>
+			<div class="control-group">
+				<span class="help-block" id="prj_sharefrm_output">Your sharing url will be: </span>
+				<div class="controls"><button class="btn btn-primary" onlick="project_share();">Submit</a></div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>
 	</div>
 </div>
 </div>
@@ -829,6 +854,17 @@ stroke-width:2px;
 			end: new Date(end).toISOString()
 		}
 		gantticc.updateJumpMonthMenu(gantticc.heatmap.start, gantticc.heatmap.end);
+	}
+	
+	function project_share() {
+		var shareId = $('project_share_id').val();
+		if ( gantticc.verifySharingId(shareId) ) {
+			$('project_share_id').parent().parent().removeClass('error').addClass("success");
+			gantticc.setFirebaseId(shareId);
+			gantticc.shareToFirebase();
+		} else {
+			$('project_share_id').parent().parent().addClass('error');
+		}
 	}
 	
 </script>
