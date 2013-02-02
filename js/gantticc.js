@@ -1,8 +1,10 @@
 var gantticc = gantticc || {};
 
 // constructor
-function Project(pid) {
-	if ((typeof pid) === "undefined") {
+function Project(pid, obj) {
+	if (pid === -1) {
+		$.extend(this, obj); // object coming from Firebase
+	} else if ((typeof pid) === "undefined") {
 		this.pid = "";
 		this.title = "My Awesome Project";
 		this.start = new Date().toISOString();
@@ -25,15 +27,27 @@ Project.prototype = {
 		return this.pid;
 	},
 	save: function(projectOnly) {
-		localStorage["project"+this.getPid()] = JSON.stringify({
-			title: this.title,
-			start: this.start,
-			end: this.end
-		});
+		var obj = {
+				title: this.title,
+				start: this.start,
+				end: this.end
+		};
+		if (gantticc.firebaseId) {
+			var prjRef = new Firebase(gantticc.firebaseUrl+gantticc.firebaseId+"/"+this.pid);
+			obj.pid = this.pid;
+			prjRef.update(obj);
+		} else {
+			localStorage["project"+this.getPid()] = JSON.stringify(obj);
+		}
 	},
 	delete: function(){
-		localStorage.removeItem("project"+this.getPid());
-		localStorage.removeItem("tasks"+this.getPid());
+		if (gantticc.firebaseId) {
+			var pageRef = new Firebase(gantticc.firebaseUrl+gantticc.firebaseId+"/"+this.pid);
+			pageRef.remove();
+		} else {
+			localStorage.removeItem("project"+this.getPid());
+			localStorage.removeItem("tasks"+this.getPid());
+		}
 	},
 	load: function(){
 		if (localStorage["project"+this.getPid()] !== null) {
@@ -46,7 +60,12 @@ Project.prototype = {
 		this.tasks = JSON.parse(localStorage["tasks"+this.getPid()]);
 	},
 	saveTasks: function(){
-		localStorage["tasks"+this.getPid()] = JSON.stringify(this.tasks);
+		if (gantticc.firebaseId) {
+			var prjRef = new Firebase(gantticc.firebaseUrl+gantticc.firebaseId+"/"+this.pid);
+			prjRef.update({ tasks: this.tasks });
+		} else {
+			localStorage["tasks"+this.getPid()] = JSON.stringify(this.tasks);
+		}
 	},
 	getTask: function(tid){
 		for (var i=0; i<this.tasks.length; i++) {
@@ -129,6 +148,12 @@ gantticc.getColorValue = function(c){
 };
 
 gantticc.init = function(){
+	gantticc.loaded = false;
+	gantticc.listenKey = true; // listen/handle key presses
+	gantticc.heatmap = {} // Heat Map overrides
+	gantticc.projects = [];
+	gantticc.project = null;
+	gantticc.maxProjCount = 5; // Max number of projects
 	// Predefined colors
 	gantticc.colors = ['null', 'gray', 'blue', 'orange'];
 	gantticc.colorValues = {
@@ -136,12 +161,8 @@ gantticc.init = function(){
 		blue: ["#bee1ef", "#d4effc"],
 		orange: ["#ff944d", "#ffa264"]
 	};
-	// Max number of projects
-	gantticc.maxProjCount = 5;
-	
 	gantticc.firebaseUrl = "https://gantticc.firebaseio.com/";
-	// TODO: Check if data should be loaded from server
-	// Look for GET parameter fbdb and etc...
+	gantticc.siteUrl = "http://gantti.cc/test.html";
 	
 	// Check support for Local Storage
 	gantticc.localstorage = 1;
@@ -152,15 +173,39 @@ gantticc.init = function(){
 		console.log("Error: local storage not supported!");
 		gantticc.localstorage = 0;
 	}
-	// listen/handle key presses
-	gantticc.listenKey = true;
 	
-	// Heat Map overrides
-	gantticc.heatmap = {}
-	
-	// Load/prepare projects
-	gantticc.projects = [];
-	gantticc.project = null;
+	// Check if data should be loaded from Firebase
+	var paramstr = window.location.search.substr(1);
+	if (paramstr.indexOf('fbdb') != -1) {
+		gantticc.firebaseId = paramstr.substr(paramstr.indexOf('fbdb')+5);
+		// try to read all data from Firebase
+		var dbRef = new Firebase(gantticc.firebaseUrl+gantticc.firebaseId);
+		dbRef.once('value', function(snapshot){
+			if (snapshot.val() == null) {
+				gantticc.firebaseId = "";
+				// failed to read from server, load/prepare data from local storage
+				gantticc.loadDataFromLocalStorage();
+			} else {
+				var data = snapshot.val();
+				// typecast into Project object
+				for (var i=0; i<data.length; i++) {
+					gantticc.projects.push(new Project(-1, data[i]));
+				}
+				gantticc.project = gantticc.projects[0];
+				gantticc.updateSharingStatus();
+				gantticc.loaded = true;
+			}
+			gchart_render();
+		});
+	} else {
+		// load straight from local storage and render
+		gantticc.firebaseId = "";
+		gantticc.loadDataFromLocalStorage();
+		gchart_render();
+	}
+};
+
+gantticc.loadDataFromLocalStorage = function(){
 	if (gantticc.localstorage == 1) {
 		gantticc.loadAllProjects();
 		if (gantticc.projects.length > 0) {
@@ -186,6 +231,7 @@ gantticc.init = function(){
 	} else {
 		gantticc.project = new Project();
 	}
+	gantticc.loaded = true;
 };
 
 gantticc.applyCurrentProject = function(){
@@ -194,9 +240,10 @@ gantticc.applyCurrentProject = function(){
 	$('#project_title_txtfield').val(gantticc.project.title);
 	$("#project_startdate").datepicker('setValue', new Date(gantticc.project.start));
 	$("#project_enddate").datepicker('setValue', new Date(gantticc.project.end));
-	project_update();
+	project_update(false);
 	gantticc.resetSwatch();
 	gantticc.resetHeatmap();
+	gantticc.updateProjectList();
 };
 
 gantticc.loadAllProjects = function(){
@@ -236,15 +283,16 @@ gantticc.setCurrentProject = function(pid){
 			gantticc.project = prj;
 		}
 	}
-	try {
-		// reload data into memory since they may have been modified
-		gantticc.project.load();
-		gantticc.project.loadTasks();
-	} catch (e) {
-		gantticc.init();
+	if (!gantticc.firebaseId) {
+		try {
+			// reload data into memory since they may have been modified
+			gantticc.project.load();
+			gantticc.project.loadTasks();
+		} catch (e) {
+			gantticc.init();
+		}
 	}
 	gantticc.applyCurrentProject();
-	gantticc.updateProjectList();
 };
 
 gantticc.deleteCurrentProject = function(){
@@ -261,14 +309,6 @@ gantticc.deleteCurrentProject = function(){
 	} else {
 		// use the first available project
 		gantticc.project = gantticc.projects[0];
-	}
-};
-
-gantticc.save = function(){
-	if (gantticc.localstorage == 0) return;
-	
-	for (var i=0; i<gantticc.projects.length; i++) {
-		gantticc.projects[i].save();
 	}
 };
 
@@ -402,38 +442,53 @@ gantticc.getHeight = function(){
 	}
 };
 
-gantticc.verifySharingId = function(sId, checkForDup) {
-	var dbRef = new Firebase(gantticc.firebaseUrl+sId);
-	dbRef.on('value', function(snapshot){
+gantticc.shareToFirebase = function(){
+	if (gantticc.firebaseId) {
+		var shareUrl = gantticc.siteUrl+"?fbdb="+gantticc.firebaseId;
+		$('#prj_sharefrm_output').html('This gantticc is currently shared at: <code><a href="'+shareUrl+'">'+shareUrl+'</a></code>');
+		return;
+	}
+	var shareId = $('#project_share_id').val();
+	var dbRef = new Firebase(gantticc.firebaseUrl+shareId);
+	dbRef.once('value', function(snapshot){
 		if (snapshot.val() == null) {
-			if (checkForDup) {
-				return true; // sId is unique
-			}
+			$('#project_share_id').parent().parent().removeClass('error').addClass("success");
+			dbRef.set(gantticc.projects, function(){
+				var shareUrl = gantticc.siteUrl+"?fbdb="+shareId;
+				$('#prj_sharefrm_output').html('Your sharing URL: <code><a href="'+shareUrl+'">'+shareUrl+'</a></code>');
+			});
 		} else {
-			if (!checkForDup) return true; // sId is being used
+			$('#project_share_id').parent().parent().addClass('error');
+			$('#prj_sharefrm_output').html('That sharing ID has been used, pick another one.');
 		}
 	});
-	return false;
 };
 
-gantticc.setFirebaseId = function(id) {
-	gantticc.fbdbId = id;
+gantticc.removeFromFirebase = function(){
+	if (gantticc.firebaseId) {
+		var dbRef = new Firebase(gantticc.firebaseUrl+gantticc.firebaseId);
+		dbRef.remove();
+		gantticc.firebaseId = "";
+		gantticc.save();
+		$('#project_share_modal').modal('hide');
+	}
 };
 
-gantticc.shareToFirebase = function(prjId){
-	if (!gantticc.fbdbId) return;
-	var dbRef = new Firebase(gantticc.firebaseUrl+gantticc.fbdbId);
-	if (!prjId) {
-		// save all data
-		dbRef.set(gantticc.projects, function(err){
-			if (error) {
-				$('#prj_sharefrm_output').text("Something went wrong while trying to complete your request.");
-				console.log(error);
-			} else {
-				var shareUrl = "http://gantti.cc/test.html?fbdb="+gantticc.fbdbId;
-				$('#prj_sharefrm_output').html('Your sharing url will be: <a href="'+shareUrl+'">'+shareUrl+'</a>');
-			}
-		});
+gantticc.updateSharingStatus = function(){
+	if (gantticc.firebaseId) {
+		var shareUrl = gantticc.siteUrl+"?fbdb="+gantticc.firebaseId;
+		var html = '<p>This gantticc is currently shared at: <code><a href="'+shareUrl+'">'+shareUrl+'</a></code></p>';
+		html += '<p>To disable sharing, you need to delete data completely from server. But don\'t worry, you still have a local copy of your data.</p>';
+		html += '<button class="btn btn-danger" onclick="gantticc.removeFromFirebase();">Delete data from server</button>';
+		$('#project_share_modal_body').html(html);
+	}
+};
+
+gantticc.save = function(){
+	if (gantticc.localstorage == 0) return;
+	for (var i=0; i<gantticc.projects.length; i++) {
+		gantticc.projects[i].save();
+		gantticc.projects[i].saveTasks();
 	}
 };
 

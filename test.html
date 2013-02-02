@@ -306,7 +306,7 @@ stroke-width:2px;
 	<div class="modal-body"><p>Are you sure you want to delete this project?</p></div>
 	<div class="modal-footer">
 		<button class="btn" data-dismiss="modal" aria-hidden="true">No</a>
-		<button class="btn btn-danger" data-dismiss="modal" aria-hidden="true" onclick="delete_cur_project();">Delete project</a>
+		<button class="btn btn-danger" data-dismiss="modal" aria-hidden="true" onclick="project_delete_cur();">Delete project</a>
 	</div>
 </div>
 <div id="project_info_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
@@ -353,18 +353,18 @@ stroke-width:2px;
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		<h3>Project Info</h3>
 	</div>
-	<div class="modal-body">
+	<div class="modal-body" id="project_share_modal_body">
 		<div class="form-horizontal">
 			<div class="control-group" id="prj_sharefrm_group">
-			<label class="control-label" for="project_share_id">Sharing id: </label>
+			<label class="control-label" for="project_share_id">Sharing ID: </label>
 			<div class="controls">
 				<input type="text" class="input" name="project_share_id" id="project_share_id" value="" size="12" />
 				<span class="help-inline"></span>
 			</div>
 			</div>
 			<div class="control-group">
-				<span class="help-block" id="prj_sharefrm_output">Your sharing url will be: </span>
-				<div class="controls"><button class="btn btn-primary" onlick="project_share();">Submit</a></div>
+				<span class="help-block" id="prj_sharefrm_output">Your sharing URL will be: </span>
+				<div class="controls" style="padding-top:15px;"><button class="btn" onclick="gantticc.shareToFirebase();">Get Sharing URL</button></div>
 			</div>
 		</div>
 	</div>
@@ -445,6 +445,14 @@ stroke-width:2px;
 		// init
 		gantticc.init();
 		
+		// bonsai will complain about this, although it works
+		//$(window).on('resize', function(){  
+		//	gchart.destroy();
+		//	gchart_render();
+		//});
+	});
+	
+	function gchart_render(){
 		gchart = bonsai.run(document.getElementById('gantt'),{
 			url: 'js/gchart.js?bustcache='+Math.random(),
 			width: gantticc.getWidth(),
@@ -589,8 +597,7 @@ stroke-width:2px;
 		});
 		// apply data into ui
 		gantticc.applyCurrentProject();
-		gantticc.updateProjectList();
-	});
+	}
 	
 	function task_form_delete(){
 		gchart.sendMessage('update_task',{
@@ -636,7 +643,7 @@ stroke-width:2px;
 		$('#task_color').val(color);
 	}
 	
-	function project_update(){
+	function project_update(nosave){
 		var startdate = new Date($('#project_startdate').val()).toISOString();
 		var enddate = new Date($('#project_enddate').val()).toISOString();
 		gchart.sendMessage('update_project',{
@@ -646,7 +653,7 @@ stroke-width:2px;
 		gantticc.project.title = $('#project_title_txtfield').val();
 		gantticc.project.start = startdate;
 		gantticc.project.end = enddate;
-		gantticc.project.save();
+		if (!nosave) gantticc.project.save();
 		gantticc.project.saveTasks();
 		// make sure mtab is within scale
 		var current = new Date($('#mtab').attr('value'));
@@ -662,7 +669,7 @@ stroke-width:2px;
 		gantticc.updateProjectList();
 	}
 	
-	function delete_cur_project(){
+	function project_delete_cur(){
 		gantticc.deleteCurrentProject();
 		gantticc.applyCurrentProject();
 		gchart.sendMessage('init_tasks',{
@@ -854,17 +861,6 @@ stroke-width:2px;
 			end: new Date(end).toISOString()
 		}
 		gantticc.updateJumpMonthMenu(gantticc.heatmap.start, gantticc.heatmap.end);
-	}
-	
-	function project_share() {
-		var shareId = $('project_share_id').val();
-		if ( gantticc.verifySharingId(shareId) ) {
-			$('project_share_id').parent().parent().removeClass('error').addClass("success");
-			gantticc.setFirebaseId(shareId);
-			gantticc.shareToFirebase();
-		} else {
-			$('project_share_id').parent().parent().addClass('error');
-		}
 	}
 	
 </script>
