@@ -769,12 +769,15 @@ Gantt.prototype = {
 			});
 			for (var j=0; j<arr.data.length; j++) {
 				var t = arr.data[j];
-				t.count = t.tasks.length.toString();
-				t.y = (i+1)*60;
-				// calculate x coordinate
-				var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.date));
-				var tb = new TaskBlock(_gantt.body, x_pos, t);
-				gantticc.tasks.push(tb);
+				if (t.tasks.length > _gantt.heatmap.min) {
+					// do not render min (for performance)
+					t.count = t.tasks.length.toString();
+					t.y = (i+1)*60;
+					// calculate x coordinate
+					var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.date));
+					var tb = new TaskBlock(_gantt.body, x_pos, t);
+					gantticc.tasks.push(tb);
+				}
 			}
 		}
 		// reset vertical scroll
