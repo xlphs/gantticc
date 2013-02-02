@@ -314,7 +314,14 @@ stroke-width:2px;
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		<h3>Project Info</h3>
 	</div>
-	<div id="project_info" class="modal-body"></div>
+	<div id="project_info" class="modal-body">
+		<p id="prj_inmd_dfprj"></p>
+		<h4>Statistics</h4>
+		<p>Number of tasks:<span id="prj_ifmd_ptcnt"></span></p>
+		<h4>Data Export</h4>
+		<p>CSV data can be imported into other apps such as Google Calendar. Just copy and paste the text below and save as a .csv file.</p>
+		<textarea id="prj_ifmd_expdata" class="span6" rows="5"></textarea>
+	</div>
 	<div class="modal-footer">
 		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
 	</div>
@@ -342,6 +349,7 @@ stroke-width:2px;
 			<li><code>h</code>: switch to/from heat map mode.</li>
 			<li><code>d</code>: set unit to day, and/or jump to today.</li>
 			<li><code>w</code>: set unit to week, and/or jump to current week.</li>
+			<li><code>r</code>: resize chart to fit current window size.</li>
 		</ul>
 	</div>
 	<div class="modal-footer">
@@ -355,6 +363,7 @@ stroke-width:2px;
 	</div>
 	<div class="modal-body" id="project_share_modal_body">
 		<div class="form-horizontal">
+			<p>By sharing this gantticc, you can access the data you've created so far on other devices. Your data will be hosted at Firebase. Pick a name to get started:</p>
 			<div class="control-group" id="prj_sharefrm_group">
 			<label class="control-label" for="project_share_id">Sharing ID: </label>
 			<div class="controls">
@@ -364,7 +373,7 @@ stroke-width:2px;
 			</div>
 			<div class="control-group">
 				<span class="help-block" id="prj_sharefrm_output">Your sharing URL will be: </span>
-				<div class="controls" style="padding-top:15px;"><button class="btn" onclick="gantticc.shareToFirebase();">Get Sharing URL</button></div>
+				<div class="controls" style="padding-top:15px;"><button class="btn btn-primary" onclick="gantticc.shareToFirebase();">Get Sharing URL</button></div>
 			</div>
 		</div>
 	</div>
@@ -381,75 +390,8 @@ stroke-width:2px;
 	
 	$(function(){
 		// ---- Entry point ----
-		// setup date picker
-		$(".datepickr").datepicker();
-		$(".datepickr").on('click', function(e){
-			$(e.target).datepicker('show');
-		});
-		$(".datepickr").on('changeDate', function(e){
-			$(e.target).datepicker('hide');
-		});
-		// setup tooltips
-		$('a[rel=tooltip]').tooltip();
-		// setup jump-to-month dropdown
-		$('#mtab').on('click', function(){
-			var x = $('#mtab').offset().left;
-			var y = $('#mtab').offset().top;
-			$('#mselects').css({ left: x, top: y+2 });
-			$('#mselects').show();
-		});
-		$(document).bind('mouseup touchstart', function(e){
-		    var msel = $('#mselects');
-			if (!msel.is(e.target) && msel.has(e.target).length === 0){
-				msel.hide();
-			}
-		});
-		$(document).on('keydown', function(e){
-			if (e.keyCode == 27) {
-				// listen for escape
-				if ($('#task_form').is(':visible')) task_form_cancel();
-				if ($('#mselects').is(':visible')) $('#mselects').hide();
-			} else if (e.keyCode == 72) {
-				// listen for heatmap hotkey "h"
-				if (gantticc.listenKey && !$('#task_form').is(':visible')) project_heatmap();
-			} else if (e.keyCode == 68) {
-				// switch to day mode "d"
-				if (gantticc.listenKey && !$('#task_form').is(':visible')) set_scale("day");
-			} else if (e.keyCode == 87) {
-				// switch to week mode "d"
-				if (gantticc.listenKey && !$('#task_form').is(':visible')) set_scale("week");
-			}
-		});
-		// handle keydown event or not
-		$('input[type=text]')
-		    .bind("focus", function(){ gantticc.listenKey = false; })
-		    .bind("blur", function(){ gantticc.listenKey = true; });
-		$('textarea')
-		    .bind("focus", function(){ gantticc.listenKey = false; })
-		    .bind("blur", function(){ gantticc.listenKey = true; });
-		// setup project info model
-		$('#project_info_modal').on('show', function(){
-			var html = [];
-			html.push("<p>Number of tasks: "+gantticc.project.tasks.length+"</p>");
-			html.push("<p>CSV data can be imported into other apps such as Google Calendar. Just copy and paste the text below and save as a .csv file.</p>");
-			html.push("<textarea class=\"span6\" rows=\"5\">"+gantticc.exportData("google_cal")+"</textarea>");
-			$('#project_info').html(html.join(""));
-		});
-		if ( $('#topbar').height() > 44) {
-			// hide not-so-useful icons for small screen size
-			$('.hideme').each(function(){
-				$(this).hide();
-			});
-			$('#topbar-center').removeClass('span4').addClass('span8');
-		}
-		// init
+		gantticc.initUI();
 		gantticc.init();
-		
-		// bonsai will complain about this, although it works
-		//$(window).on('resize', function(){  
-		//	gchart.destroy();
-		//	gchart_render();
-		//});
 	});
 	
 	function gchart_render(){

@@ -142,6 +142,83 @@ Project.prototype = {
 	}
 };
 
+gantticc.initUI = function(){
+	// setup date picker
+	$(".datepickr").datepicker();
+	$(".datepickr").on('click', function(e){
+		$(e.target).datepicker('show');
+	});
+	$(".datepickr").on('changeDate', function(e){
+		$(e.target).datepicker('hide');
+	});
+	// setup tooltips
+	$('a[rel=tooltip]').tooltip();
+	// setup jump-to-month dropdown
+	$('#mtab').on('click', function(){
+		var x = $('#mtab').offset().left;
+		var y = $('#mtab').offset().top;
+		$('#mselects').css({ left: x, top: y+2 });
+		$('#mselects').show();
+	});
+	// setup project info model
+	$('#project_info_modal').on('show', function(){
+		if (gantticc.project.pid == "0") {
+			$('#prj_inmd_dfprj').text('This project is currently the default project.');
+		} else {
+			$('#prj_inmd_dfprj').html('<button class="btn" onclick="gantticc.setDefaultProject(\''+gantticc.project.pid+'\');">Make this the default project</button>');
+		}
+		$('#prj_ifmd_ptcnt').text(gantticc.project.tasks.length);
+		$('#prj_ifmd_expdata').text(gantticc.exportData("google_cal"));
+	});
+	$(document).bind('mouseup touchstart', function(e){
+	    var msel = $('#mselects');
+		if (!msel.is(e.target) && msel.has(e.target).length === 0){
+			msel.hide();
+		}
+	});
+	// listen for hotkeys
+	$(document).on('keydown', function(e){
+		if (e.keyCode == 27) {
+			// listen for escape
+			if ($('#task_form').is(':visible')) task_form_cancel();
+			if ($('#mselects').is(':visible')) $('#mselects').hide();
+		} else if (e.keyCode == 72) {
+			// listen for heatmap hotkey "h"
+			if (gantticc.listenKey && !$('#task_form').is(':visible')) project_heatmap();
+		} else if (e.keyCode == 68) {
+			// switch to day mode "d"
+			if (gantticc.listenKey && !$('#task_form').is(':visible')) set_scale("day");
+		} else if (e.keyCode == 87) {
+			// switch to week mode "d"
+			if (gantticc.listenKey && !$('#task_form').is(':visible')) set_scale("week");
+		} else if (e.keyCode == 82) {
+			// r to resize chart
+			if (gantticc.resized) {
+				gchart.destroy();
+				gchart_render();
+				gantticc.resized = false;
+			}
+		}
+	});
+	// handle keydown event or not
+	$('input[type=text]')
+	    .bind("focus", function(){ gantticc.listenKey = false; })
+	    .bind("blur", function(){ gantticc.listenKey = true; });
+	$('textarea')
+	    .bind("focus", function(){ gantticc.listenKey = false; })
+	    .bind("blur", function(){ gantticc.listenKey = true; });
+	$(window).on('resize', function(){  
+		gantticc.resized = true;
+	});
+	if ( $('#topbar').height() > 44) {
+		// hide not-so-useful icons for small screen size
+		$('.hideme').each(function(){
+			$(this).hide();
+		});
+		$('#topbar-center').removeClass('span4').addClass('span8');
+	}
+};
+
 gantticc.getColorValue = function(c){
 	if (!c) c = "gray"; // default color
 	return gantticc.colorValues[c][0];
@@ -149,6 +226,7 @@ gantticc.getColorValue = function(c){
 
 gantticc.init = function(){
 	gantticc.loaded = false;
+	gantticc.resized = false;
 	gantticc.listenKey = true; // listen/handle key presses
 	gantticc.heatmap = {} // Heat Map overrides
 	gantticc.projects = [];
@@ -175,9 +253,8 @@ gantticc.init = function(){
 	}
 	
 	// Check if data should be loaded from Firebase
-	var paramstr = window.location.search.substr(1);
-	if (paramstr.indexOf('fbdb') != -1) {
-		gantticc.firebaseId = paramstr.substr(paramstr.indexOf('fbdb')+5);
+	gantticc.firebaseId = gantticc.getParamFromURL("fbdb");
+	if (gantticc.firebaseId) {
 		// try to read all data from Firebase
 		var dbRef = new Firebase(gantticc.firebaseUrl+gantticc.firebaseId);
 		dbRef.once('value', function(snapshot){
@@ -189,9 +266,10 @@ gantticc.init = function(){
 				var data = snapshot.val();
 				// typecast into Project object
 				for (var i=0; i<data.length; i++) {
-					gantticc.projects.push(new Project(-1, data[i]));
+					var prj = new Project(-1, data[i]);
+					if (prj.pid === "0") gantticc.project = prj; // default project
+					gantticc.projects.push(prj);
 				}
-				gantticc.project = gantticc.projects[0];
 				gantticc.updateSharingStatus();
 				gantticc.loaded = true;
 			}
@@ -210,18 +288,13 @@ gantticc.loadDataFromLocalStorage = function(){
 		gantticc.loadAllProjects();
 		if (gantticc.projects.length > 0) {
 			// check if GET parameter specifies a project to use
-			var userPid = gantticc.getUserSpecifiedProject();
-			if (userPid) {
-				for (var i=0; i<gantticc.projects.length; i++) {
-					var prj = gantticc.projects[i];
-					if (userPid === prj.pid) {
-						gantticc.project = prj;
-					}
+			var userPid = gantticc.getParamFromURL("project");
+			if (!userPid) userPid = "0";
+			for (var i=0; i<gantticc.projects.length; i++) {
+				var prj = gantticc.projects[i];
+				if (userPid === prj.pid) {
+					gantticc.project = prj;
 				}
-			}
-			if (gantticc.project == null) {
-				// use default project
-				gantticc.project = gantticc.projects[0];
 			}
 		} else {
 			var prj = new Project();
@@ -268,7 +341,7 @@ gantticc.updateProjectList = function(){
 		} else {
 			str += prj.title;
 		}
-		str += "</a></li>";
+		str += "<span><span></a></li>";
 		list.push(str);
 	}
 	list.push("<li class=\"divider\"></li>");
@@ -376,15 +449,34 @@ gantticc.exportData = function(type) {
 	return "";
 };
 
-gantticc.getUserSpecifiedProject = function(){
+gantticc.getParamFromURL = function(key){
 	var str = window.location.search.substr(1);
 	var paramArr = str.split("&");
 	var params = {};
 	for (var i=0; i<paramArr.length; i++) {
 		var tmp = paramArr[i].split("=");
-		if (tmp[0] === "project") return tmp[1];
+		if (tmp[0] === key) return tmp[1];
 	}
 	return "";
+};
+
+gantticc.setDefaultProject = function(pid){
+	// switch project with pid 0 with this one
+	var newDefault = null,
+		oldDefault = null;
+	for (var i=0; i<gantticc.projects.length; i++) {
+		var prj = gantticc.projects[i];
+		if (prj.pid === pid) newDefault = prj;
+		if (prj.pid === "0") oldDefault = prj;
+	}
+	if (!newDefault || !oldDefault) return;
+	oldDefault.pid = pid;
+	oldDefault.save();
+	oldDefault.saveTasks();
+	newDefault.pid = "0";
+	newDefault.save();
+	newDefault.saveTasks();
+	$('#prj_inmd_dfprj').text('This project has been set as the default project.');
 };
 
 gantticc.resetSwatch = function(){
