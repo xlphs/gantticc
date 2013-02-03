@@ -26,7 +26,7 @@ Project.prototype = {
 		if (this.pid == "0") return "";
 		return this.pid;
 	},
-	save: function(projectOnly) {
+	save: function() {
 		var obj = {
 				title: this.title,
 				start: this.start,
@@ -489,8 +489,7 @@ gantticc.resetSwatch = function(){
 };
 
 gantticc.resetHeatmap = function(){
-	$('#heatmap_status').html('Heat Map');
-	$('#heatmap_status').attr('value', '');
+	$('#heatmap_status').html('Heat Map').attr('value', '');
 };
 
 gantticc.openInNewWind = function(){
@@ -516,22 +515,11 @@ gantticc.getAllTasksInWeek = function(weekNum){
 };
 
 gantticc.getWidth = function(){
-	if (gantticc.print) {
-		var a = new Date(gantticc.project.start).getTime();
-		var b = new Date(gantticc.project.end).getTime();
-		var days = (b-a)/1000/3600/24;
-		return 30*days;
-	} else {
-		return $('#controls').width();
-	}
+	return $('#controls').width();
 };
 
 gantticc.getHeight = function(){
-	if (gantticc.print) {
-		return 500;
-	} else {
-		return $(document).height()-$('#topbar').height()-7;
-	}
+	return $(document).height()-$('#topbar').height()-7;
 };
 
 gantticc.shareToFirebase = function(){

@@ -24,14 +24,6 @@ overflow:visible;
 *position:relative;
 *z-index:2;
 }
-#project_title{
-display:inline-block;
-font-size:20px;
-font-weight:200;
-line-height:30px;
-color:#777777;
-text-shadow:0 1px 0 #ffffff;
-}
 .topbar-inner{
 min-height:40px;
 background-color:#fafafa;
@@ -179,16 +171,16 @@ background-image:none;
 filter:progid:DXImageTransform.Microsoft.gradient(enabled = false);
 cursor:default;
 }
-svg {
+svg{
 font-size:10px;
 shape-rendering:crispEdges;
 }
-.day {
+.day{
 fill:#fff;
 stroke:#000;
 stroke-opacity:.1;
 }
-.month {
+.month{
 fill:none;
 stroke:#000;
 stroke-width:2px;
@@ -744,8 +736,7 @@ stroke-width:2px;
 				gantticc.heatmap = {};
 				return;
 			} else {
-				$('#heatmap_status').html('<b>Heat Map</b>');
-				$('#heatmap_status').attr('value', 'on');
+				$('#heatmap_status').html('<b>Heat Map</b>').attr('value', 'on');
 			}
 		}
 		if (!unit) unit = "day";
@@ -805,6 +796,17 @@ stroke-width:2px;
 		gantticc.updateJumpMonthMenu(gantticc.heatmap.start, gantticc.heatmap.end);
 	}
 	
+</script>
+
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-38177257-1']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
 </script>
 
 </html>
