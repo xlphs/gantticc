@@ -12,7 +12,7 @@ if ( (navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPad/
 	IOS_USER = true;
 }
 var OFFSET_TXT_VERT_ALIGN = false;
-if (navigator.userAgent.indexOf("Firefox") != -1) {
+if (navigator.userAgent.indexOf("Firefox") != -1 || navigator.userAgent.indexOf("Opera") != -1) {
 	OFFSET_TXT_VERT_ALIGN = true;
 } else if (navigator.appName == 'Microsoft Internet Explorer') {
 	// Note: IE will display fine, but mouse event hanlding is buggy
