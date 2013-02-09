@@ -431,9 +431,16 @@ Gantt.prototype = {
 						}, {
 							easing: 'sineOut'
 						});
+						// calculate new end date
+						if (_task.weekspan === null) {
+							_task.endDate = new Date(_task.startDate.getTime() + 1000*3600*24*(_task.dayspan-1));
+						} else {
+							_task.endDate = new Date(_task.startDate.getTime() + 1000*3600*24*7*_task.weekspan);
+						}
 						stage.sendMessage('update_task', {
 							tid: _task.tid,
 							start: _task.startDate.toISOString(),
+							end: _task.endDate.toISOString(),
 							row: row.toString()
 						});
 					} else {
