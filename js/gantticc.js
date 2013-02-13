@@ -170,6 +170,7 @@ gantticc.initUI = function(){
 		$('#prj_ifmd_ptcnt').text(gantticc.project.tasks.length);
 		$('#prj_ifmd_expdata').text(gantticc.exportData("google_cal"));
 	});
+	// hide jump-to-month dropdown upon outside click
 	$(document).bind('mouseup touchstart', function(e){
 	    var msel = $('#mselects');
 		if (!msel.is(e.target) && msel.has(e.target).length === 0){
@@ -200,28 +201,22 @@ gantticc.initUI = function(){
 			}
 		}
 	});
-	// handle keydown event or not
+	// enable handling of keydown event or not
 	$('input[type=text]')
 	    .bind("focus", function(){ gantticc.listenKey = false; })
 	    .bind("blur", function(){ gantticc.listenKey = true; });
 	$('textarea')
 	    .bind("focus", function(){ gantticc.listenKey = false; })
 	    .bind("blur", function(){ gantticc.listenKey = true; });
+	// update window resize status
 	$(window).on('resize', function(){  
 		gantticc.resized = true;
 	});
 	if ( $('#topbar').height() > 44) {
 		// hide not-so-useful icons for small screen size
-		$('.hideme').each(function(){
-			$(this).hide();
-		});
+		$('.hideme').each(function(){ $(this).hide(); });
 		$('#topbar-center').removeClass('span4').addClass('span8');
 	}
-};
-
-gantticc.getColorValue = function(c){
-	if (!c) c = "gray"; // default color
-	return gantticc.colorValues[c][0];
 };
 
 gantticc.init = function(){
@@ -247,7 +242,7 @@ gantticc.init = function(){
 	if ((typeof Storage) !== "undefined") {
 		gantticc.localstorage = 1;
 	} else {
-		// no local storage
+		// no local storage, probably show an alert or something
 		console.log("Error: local storage not supported!");
 		gantticc.localstorage = 0;
 	}
@@ -279,8 +274,14 @@ gantticc.init = function(){
 		// load straight from local storage and render
 		gantticc.firebaseId = "";
 		gantticc.loadDataFromLocalStorage();
+		gantticc.loaded = true;
 		gchart_render();
 	}
+};
+
+gantticc.getColorValue = function(c){
+	if (!c) c = "gray"; // default color
+	return gantticc.colorValues[c][0];
 };
 
 gantticc.loadDataFromLocalStorage = function(){
@@ -304,19 +305,16 @@ gantticc.loadDataFromLocalStorage = function(){
 	} else {
 		gantticc.project = new Project();
 	}
-	gantticc.loaded = true;
 };
 
 gantticc.applyCurrentProject = function(){
 	// Update UI
-	gantticc.updateCurrentMonthBtn(new Date());
 	$('#project_title_txtfield').val(gantticc.project.title);
 	$("#project_startdate").datepicker('setValue', new Date(gantticc.project.start));
 	$("#project_enddate").datepicker('setValue', new Date(gantticc.project.end));
 	project_update(false);
 	gantticc.resetSwatch();
 	gantticc.resetHeatmap();
-	gantticc.updateProjectList();
 };
 
 gantticc.loadAllProjects = function(){
@@ -492,12 +490,6 @@ gantticc.resetHeatmap = function(){
 	$('#heatmap_status').html('Heat Map').attr('value', '');
 };
 
-gantticc.openInNewWind = function(){
-	// Note: Chrome will open a tiny new window, will have to reload
-	var url = location.protocol+'//'+location.host+location.pathname+'?project='+gantticc.project.pid;
-	window.open(url);
-};
-
 gantticc.getAllTasksOnDate = function(date){
 	var arr = [];
 	for (var i=0; i<gantticc.projects.length; i++) {
@@ -520,6 +512,12 @@ gantticc.getWidth = function(){
 
 gantticc.getHeight = function(){
 	return $(document).height()-$('#topbar').height()-7;
+};
+
+gantticc.openInNewWind = function(){
+	// Note: Chrome will open a tiny new window, will have to reload
+	var url = location.protocol+'//'+location.host+location.pathname+'?project='+gantticc.project.pid;
+	window.open(url);
 };
 
 gantticc.shareToFirebase = function(){

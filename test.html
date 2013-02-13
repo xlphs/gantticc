@@ -290,7 +290,7 @@ stroke-width:2px;
 	<button class="btn" onclick="task_form_submit();">Save</button>
 	<button class="btn" style="float:right;" onclick="task_form_delete();"><span class="icon-trash"></span></button>
 </div>
-<div id="project_delete_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+<div id="project_delete_modal" class="modal hide" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		<h3>Delete Project</h3>
@@ -301,7 +301,7 @@ stroke-width:2px;
 		<button class="btn btn-danger" data-dismiss="modal" aria-hidden="true" onclick="project_delete_cur();">Delete project</a>
 	</div>
 </div>
-<div id="project_info_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+<div id="project_info_modal" class="modal hide" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		<h3>Project Info</h3>
@@ -309,7 +309,7 @@ stroke-width:2px;
 	<div id="project_info" class="modal-body">
 		<p id="prj_inmd_dfprj"></p>
 		<h4>Statistics</h4>
-		<p>Number of tasks:<span id="prj_ifmd_ptcnt"></span></p>
+		<p>Number of tasks: <span id="prj_ifmd_ptcnt"></span></p>
 		<h4>Data Export</h4>
 		<p>CSV data can be imported into other apps such as Google Calendar. Just copy and paste the text below and save as a .csv file.</p>
 		<textarea id="prj_ifmd_expdata" class="span6" rows="5"></textarea>
@@ -318,13 +318,12 @@ stroke-width:2px;
 		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
 	</div>
 </div>
-<div id="gantticc_help_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+<div id="gantticc_help_modal" class="modal hide" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		<h3>Help</h3>
 	</div>
 	<div class="modal-body">
-		<p>If you find any issues, you can submit them to this project's <a href="https://github.com/xlphs/gantticc">github page</a>.</p>
 		<h4>Tasks</h4>
 		<ul>
 			<li>To create, double click on empty space.</li>
@@ -343,12 +342,14 @@ stroke-width:2px;
 			<li><code>w</code>: set unit to week, and/or jump to current week.</li>
 			<li><code>r</code>: resize chart to fit current window size.</li>
 		</ul>
+		<h4>Issues</h4>
+		<p>If you find any issues, you can submit them to this project's <a href="https://github.com/xlphs/gantticc">github page</a>.</p>
 	</div>
 	<div class="modal-footer">
 		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
 	</div>
 </div>
-<div id="project_share_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+<div id="project_share_modal" class="modal hide" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		<h3>Project Info</h3>
@@ -428,14 +429,7 @@ stroke-width:2px;
 					}
 				});
 				stage.on('message:init_tasks', function(data){
-					var scroll_date = new Date();
-					if (data.no_scroll) {
-						scroll_date = gchart.getScrollDate();
-					}
 					gchart.initTasks(data.tasks);
-					gchart.scrollToDate(scroll_date);
-					// update jump to month button
-					stage.sendMessage('scroll_date', {date: scroll_date});
 				});
 				stage.on('message:init_heatmap', function(data){
 					// preserve current scroll position
@@ -457,7 +451,7 @@ stroke-width:2px;
 				});
 				stage.on('message:scroll_to_date', function(data){
 					var date = new Date(data.date);
-					gchart.scrollToDate(date);
+					gchart.scrollToDate(date, 1);
 				});
 				stage.on('message:set_swatch', function(data){
 					gchart.highlightTaskByColor(data.color, data.status);
@@ -473,7 +467,7 @@ stroke-width:2px;
 						gchart.unit = data.unit;
 						gchart.drawHeader(data.start_date, data.end_date);
 						gchart.updateCurrentUnit(1);
-						gchart.scrollToDate(scrollDate);
+						gchart.scrollToDate(scrollDate, 1);
 					}
 					// update jump to month button
 					stage.sendMessage('scroll_date', {date: scrollDate});
@@ -580,25 +574,25 @@ stroke-width:2px;
 	function project_update(nosave){
 		var startdate = new Date($('#project_startdate').val()).toISOString();
 		var enddate = new Date($('#project_enddate').val()).toISOString();
+		var current = $('#mtab').attr('value') ? new Date($('#mtab').attr('value')) : new Date();
+		if (current < new Date(gantticc.project.start)){
+			current = new Date(gantticc.project.start);
+		} else if (current > new Date(gantticc.project.end)){
+			current = new Date(gantticc.project.end);
+		}
 		gchart.sendMessage('update_project',{
 			start_date: startdate,
-			end_date: enddate
+			end_date: enddate,
+			scroll_date: current
 		});
 		gantticc.project.title = $('#project_title_txtfield').val();
 		gantticc.project.start = startdate;
 		gantticc.project.end = enddate;
-		if (!nosave) gantticc.project.save();
-		gantticc.project.saveTasks();
-		// make sure mtab is within scale
-		var current = new Date($('#mtab').attr('value'));
-		var to = current;
-		if (current < new Date(gantticc.project.start)){
-			to = new Date(gantticc.project.start);
-			gchart_scroll(to);
-		} else if (current > new Date(gantticc.project.end)){
-			to = new Date(gantticc.project.end);
-			gchart_scroll(to);
+		if (!nosave) {
+			gantticc.project.save();
+			gantticc.project.saveTasks();
 		}
+		gantticc.updateCurrentMonthBtn(current);
 		gantticc.updateJumpMonthMenu();
 		gantticc.updateProjectList();
 	}

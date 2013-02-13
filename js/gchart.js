@@ -141,7 +141,7 @@ TaskBlock.prototype = {
 		} else {
 			bg = new Rect(0, 0, GANTT_DAY_BLK_LEN*span, GANTT_TASK_BLK_HGT, 4)
 				.attr({
-					strokeColor: '#bbb',
+					strokeColor: '#d4d4d4',
 					strokeWidth: 2,
 					filters: filter.blur(0)
 				})
@@ -188,11 +188,11 @@ TaskBlock.prototype = {
 			x: this.width-3, y: 0, opacity: 0
 		}).addTo(group);
 		var edgeLine1 = new Rect(0, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
-		edgeLine1.fill(color.parse('#555'));
+		edgeLine1.fill(color.parse('#bbb'));
 		var edgeLine1 = new Rect(2, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
 		edgeLine1.fill(color.parse('#eee'));
 		var edgeLine2 = new Rect(4, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
-		edgeLine2.fill(color.parse('#555'));
+		edgeLine2.fill(color.parse('#bbb'));
 	},
 	showEditForm: function(task, gchart, x, y) {
 		// scroll to position the popup inside chart
@@ -686,7 +686,6 @@ Gantt.prototype = {
 						date_x += GANTT_DAY_BLK_LEN;
 						daycount++;
 						weekCount++;
-						//console.log(day+" is week number "+w);
 						if (inc == 0) break;
 						d += inc;
 					}
@@ -875,11 +874,12 @@ Gantt.prototype = {
 			});
 		}
 	},
-	scrollToDate: function(date) {
+	// @param anim: set to 1 to render animation
+	scrollToDate: function(date, anim) {
 		var x = TaskBlock.prototype.calculateXFromDate(date);
 		if (x >= 0) {
 			var diffx = x-Math.abs(this.x - GANTT_UNIT_INDT_LEN);
-			this.scrollX(diffx, 1);
+			this.scrollX(diffx, anim);
 			this.updateCurrentUnit();
 		}
 	},
