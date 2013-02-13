@@ -487,6 +487,8 @@ stroke-width:2px;
 				gchart.sendMessage('init_tasks',{
 					tasks: gantticc.project.tasks
 				});
+				// now that everything's ready, show intro if necessary
+				gantticc.showIntro();
 			});
 			gchart.on('message:edit_task', function(data){
 				var task = gantticc.project.getTask(data.tid);

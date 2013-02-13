@@ -570,6 +570,32 @@ gantticc.save = function(){
 	}
 };
 
+gantticc.showIntro = function(){
+	if ( gantticc.getCookie("firsttime").length < 1 ) {
+		// just show help modal
+		$('#gantticc_help_modal').modal('show');
+	}
+	gantticc.setCookie("firsttime", "no", 10);
+};
+
+gantticc.setCookie = function(key, value, numDays){
+	var expiry = new Date();
+	expiry.setDate(expiry.getDate() + numDays);
+	var cookie = escape(value) + ( (expiry==null) ? "" : "; expires="+expiry.toUTCString() );
+	document.cookie = key + "=" + cookie;
+};
+
+gantticc.getCookie = function(key){
+	var i, x, y, allCookies = document.cookie.split(";");
+	for (i=0; i<allCookies.length; i++) {
+		x = allCookies[i].substr(0,allCookies[i].indexOf("="));
+		y = allCookies[i].substr(allCookies[i].indexOf("=")+1);
+		x = x.replace(/^\s+|\s+$/g,"");
+		if (x == key) return unescape(y);
+	}
+	return "";
+};
+
 Date.prototype.getWeekNumber = function(d) {
 	/* For a given date, get the ISO week number
 	* Based on information at:
