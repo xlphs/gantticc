@@ -143,6 +143,8 @@ Project.prototype = {
 };
 
 gantticc.initUI = function(){
+	// allocate space for gchart
+	$('#gantt').css('min-height', gantticc.getHeight());
 	// setup date picker
 	$(".datepickr").datepicker();
 	$(".datepickr").on('click', function(e){
