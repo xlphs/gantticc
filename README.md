@@ -10,9 +10,9 @@ Try it live at [Gantticc](http://gantti.cc/).
 - Heat map
 - Multiple projects
 - Local storage or hosted online at [Firebase](https://www.firebase.com/)
+- Export as CSV
+- Print as agenda
 
 #### Note
-
-This is still under development, use at your own risk.
 
 Supports Chrome (24), Firefox (18), Safari (5), Opera (12).
