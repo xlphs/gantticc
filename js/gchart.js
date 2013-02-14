@@ -124,11 +124,11 @@ TaskBlock.prototype = {
 		if (_task.count) {
 			// orange for total, blue for project
 			// 60 = GANTT_TASK_BLK_HGT * 2
-			var colorRgb = (_task.y == 60) ? "rgb(240,88,13)" : "rgb(49,130,189)";
+			var colorValue = (_task.y == 60) ? "rgba(240,88,13" : "rgba(30,130,189";
+			var colorRGBA = colorValue+","+gchart.getHeatMapColorOpacity(parseInt(_task.count))+")";
 			group.attr('cursor', "default");
 			bg = new Rect(0, 0, GANTT_DAY_BLK_LEN*span, GANTT_TASK_BLK_HGT)
-				.attr('filters', new filter.Opacity( gchart.getHeatMapColorOpacity(parseInt(_task.count)) ))
-				.fill(color.parse(colorRgb))
+				.fill( color.parse(colorRGBA) )
 				.addTo(group);
 			_task.bg_asset = bg;
 			group.on('mouseover', function(e){
