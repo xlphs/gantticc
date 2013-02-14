@@ -125,7 +125,13 @@ function gchart_render(){
 			if (task == null) return;
 			// show the title edit form
 			$('#title_tid').val(task.tid);
-			$('#title_txtfield').val(task.title);
+			if (task.title === "New Task") {
+				$('#title_txtfield').val("");
+				$('#title_txtfield').attr('placeholder', "New Task");
+			} else {
+				$('#title_txtfield').val(task.title);
+				$('#title_txtfield').attr('placeholder', "");
+			}
 			if (!task.color) task.color = "gray";
 			$('#task_color').val(task.color);
 			for (var i=0; i<gantticc.colors.length; i++){
