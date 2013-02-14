@@ -224,6 +224,7 @@ gantticc.initUI = function(){
 
 gantticc.init = function(){
 	gantticc.loaded = false;
+	gantticc.authenticated = false;
 	gantticc.resized = false;
 	gantticc.listenKey = true; // listen/handle key presses
 	gantticc.heatmap = {} // Heat Map overrides
@@ -238,6 +239,8 @@ gantticc.init = function(){
 		orange: ["#ff944d", "#ffa264"]
 	};
 	gantticc.firebaseUrl = "https://gantticc.firebaseio.com/";
+	gantticc.firebasePasscode = "";
+	gantticc.passcodeAttempts = 0;
 	gantticc.siteUrl = "http://gantti.cc/test.html";
 	
 	// Check support for Local Storage
@@ -253,6 +256,8 @@ gantticc.init = function(){
 	// Check if data should be loaded from Firebase
 	gantticc.firebaseId = gantticc.getParamFromURL("fbdb");
 	if (gantticc.firebaseId) {
+		// fetch passcode first
+		gantticc.getFirebasePasscode(gantticc.firebaseId);
 		// try to read all data from Firebase
 		var dbRef = new Firebase(gantticc.firebaseUrl+gantticc.firebaseId);
 		dbRef.once('value', function(snapshot){
@@ -307,6 +312,41 @@ gantticc.loadDataFromLocalStorage = function(){
 		}
 	} else {
 		gantticc.project = new Project();
+	}
+};
+
+gantticc.youShallNotPass = function(submit){
+	if (gantticc.passcodeAttempts === -1) return;
+	if (submit) {
+		var pass = $('#passcode').val();
+		if (pass != gantticc.firebasePasscode) {
+			$('#passcode').css('border-color', '#b94a48');
+			gantticc.passcodeAttempts++;
+			if (gantticc.passcodeAttempts > 3) gantticc.passcodeAttempts = -1;
+		} else {
+			gantticc.authenticated = true;
+			$('#project_passcode_modal').modal('hide');
+			gchart_render();
+			gantticc.listenKey = true; // enable hostkeys
+			if ( $('#passcodermbr').prop('checked') ) {
+				gantticc.setCookie(gantticc.firebaseId, gantticc.firebasePasscode);
+			}
+		}
+	} else {
+		// sanity check
+		if (!gantticc.firebasePasscode) {
+			gantticc.authenticated = true;
+			return true;
+		}
+		//check if cookie is set and equal to the current passcode
+		var cookie = gantticc.getCookie(gantticc.firebaseId);
+		if (cookie == gantticc.firebasePasscode) {
+			gantticc.authenticated = true;
+		} else {
+			gantticc.listenKey = false; // disable hotkeys
+			$('#project_passcode_modal').modal('show');
+		}
+		return gantticc.authenticated;
 	}
 };
 
@@ -544,20 +584,19 @@ gantticc.openInNewWind = function(){
 };
 
 gantticc.shareToFirebase = function(){
-	if (gantticc.firebaseId) {
-		var shareUrl = gantticc.siteUrl+"?fbdb="+gantticc.firebaseId;
-		$('#prj_sharefrm_output').html('This gantticc is currently shared at: <code><a href="'+shareUrl+'">'+shareUrl+'</a></code>');
-		return;
-	}
 	var shareId = $('#project_share_id').val();
 	var dbRef = new Firebase(gantticc.firebaseUrl+shareId);
 	dbRef.once('value', function(snapshot){
 		if (snapshot.val() == null) {
-			$('#project_share_id').parent().parent().removeClass('error').addClass("success");
 			dbRef.set(gantticc.projects, function(){
 				var shareUrl = gantticc.siteUrl+"?fbdb="+shareId;
-				$('#prj_sharefrm_output').html('Your sharing URL: <code><a href="'+shareUrl+'">'+shareUrl+'</a></code>');
+				$('#prj_share_link').text(shareUrl).show();
 			});
+			if ( $('#project_share_passcode').val() ) {
+				gantticc.setFirebasePasscode(shareId, $('#project_share_passcode').val());
+				$('#project_share_passcode').parent().parent().addClass("success");
+			}
+			$('#project_share_id').parent().parent().removeClass('error').addClass("success");
 		} else {
 			$('#project_share_id').parent().parent().addClass('error');
 			$('#prj_sharefrm_output').html('That sharing ID has been used, pick another one.');
@@ -569,18 +608,63 @@ gantticc.removeFromFirebase = function(){
 	if (gantticc.firebaseId) {
 		var dbRef = new Firebase(gantticc.firebaseUrl+gantticc.firebaseId);
 		dbRef.remove();
+		if (gantticc.firebasePasscode) {
+			// remove the passcode
+			var dbRef = new Firebase(gantticc.firebaseUrl+"projects/"+gantticc.firebaseId);
+			dbRef.remove();
+		}
 		gantticc.firebaseId = "";
 		gantticc.save();
-		$('#project_share_modal').modal('hide');
+		$('#rmfmfbdb').parent().append("<p>This project has been removed from server.</p>");
 	}
+};
+
+gantticc.setFirebasePasscode = function(shareId, passcode){
+	var prjsRef = new Firebase(gantticc.firebaseUrl+"projects");
+	var tuple = {};
+	tuple[shareId] = passcode;
+	prjsRef.update(tuple);
+};
+
+gantticc.getFirebasePasscode = function(shareId){
+	var prjsRef = new Firebase(gantticc.firebaseUrl+"projects");
+	var query = prjsRef.startAt(null, shareId);
+	query.once('value', function(snapshot){
+		if (snapshot.val() == null) {
+			gantticc.firebasePasscode = "";
+		} else {
+			var data = snapshot.val();
+			gantticc.firebasePasscode = data[shareId];
+		}
+	});
+};
+
+gantticc.updateFirebasePasscode = function(){
+	if (!gantticc.authenticated) {
+		return; //silently fail
+	}
+	gantticc.setFirebasePasscode(gantticc.firebaseId, $('#pspasscd').val());
+	$('#pspasscd').parent().append('<span id="pspasscdok" class="help-inline">Passcode updated.</span>');
+	setTimeout(function(){
+		$('#pspasscdok').remove();
+	}, 2000);
 };
 
 gantticc.updateSharingStatus = function(){
 	if (gantticc.firebaseId) {
 		var shareUrl = gantticc.siteUrl+"?fbdb="+gantticc.firebaseId;
 		var html = '<p>This gantticc is currently shared at: <code><a href="'+shareUrl+'">'+shareUrl+'</a></code></p>';
+		html += '<form class="form-inline">';
+		html += '<label for="pspasscd">Passcode: </label>\n';
+		html += '<input type="password" class="input input-small" name="pspasscd" id="pspasscd" value="';
+		if (gantticc.firebasePasscode) {
+			for (var i=0; i<gantticc.firebasePasscode.length; i++) html += "*";
+		}
+		html += '" size="4" />\n';
+		html += '<button class="btn" onclick="gantticc.updateFirebasePasscode();return false;">Update</button>';
+		html += '</form>';
 		html += '<p>To disable sharing, you need to delete data completely from server. But don\'t worry, you still have a local copy of your data.</p>';
-		html += '<button class="btn btn-danger" onclick="gantticc.removeFromFirebase();">Delete data from server</button>';
+		html += '<button id="rmfmfbdb" class="btn btn-danger" onclick="gantticc.removeFromFirebase();">Delete data from server</button>';
 		$('#project_share_modal_body').html(html);
 	}
 };
