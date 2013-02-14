@@ -10,14 +10,65 @@
 	<script type="text/javascript" src="js/bootstrap-datepicker.js"></script>
 	<script src="https://cdn.firebase.com/v0/firebase.js"></script>
 	<script type="text/javascript" src="js/gantticc.js"></script>
-	<link rel="stylesheet" href="css/bootstrap.min.css">
-	<link rel="stylesheet" href="css/datepicker.css">
+	<link rel="stylesheet" media="screen" href="css/bootstrap.min.css">
+	<link rel="stylesheet" media="screen" href="css/datepicker.css">
 </head>
-
-<style>
+<style media="print">
+html{
+font-family:Helvetica,Arial,sans-serif;
+font-size:14px;
+color:#000;
+}
+body .container-fluid,
+.datepicker{
+display:none;
+}
+#printwrap{
+width:100%;
+min-height:300px;
+background:#fff;
+}
+h4{
+margin:20px 0 10px 0;
+border-bottom:1px solid #666;
+}
+ul{
+margin:0;
+padding:0;
+list-style:none;
+display:table;
+}
+ul*{
+margin:0;
+padding:0;
+}
+li{
+margin:0 0 5px 15px;
+vertical-align:middle;
+}
+li *{
+display:table-cell;
+}
+li .tchbx{
+width:14px;
+height:14px;
+border:1px solid #666;
+}
+li .ttl{
+padding-left:5px;
+}
+</style>
+<style media="screen">
 body .container-fluid{
 margin:0;
 padding:0;
+}
+#printwrap{
+position:absolute;
+top:0;
+left:0;
+z-index:-1000;
+display:none;
 }
 #topbar{
 overflow:visible;
@@ -50,6 +101,8 @@ min-width:80px;
 }
 #settings{
 display:none;
+background:#fff;
+z-index:1;
 }
 #gantt{
 z-index:1;
@@ -188,6 +241,7 @@ stroke-width:2px;
 </style>
 
 <body>
+<div id="printwrap"></div>
 <div class="container-fluid">
 <div id="settings" class="container-fluid">
 	<div class="row-fluid"><div class="span12 form-inline" style="padding:10px;">
@@ -211,6 +265,9 @@ stroke-width:2px;
 		</a>
 		<a class="btn" href="#project_info_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="bottom" data-original-title="Project Info">
 			<span class="icon-info-sign"></span>
+		</a>
+		<a class="btn" href="#" onclick="gantticc.print();" role="button" rel="tooltip" data-placement="bottom" data-original-title="Print">
+			<span class="icon-print"></span>
 		</a>
 		<a class="btn" href="#project_share_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="bottom" data-original-title="Share">
 			<span class="icon-share-alt"></span>
@@ -350,30 +407,6 @@ stroke-width:2px;
 	</div>
 </div>
 <div id="project_share_modal" class="modal hide" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-header">
-		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-		<h3>Project Info</h3>
-	</div>
-	<div class="modal-body" id="project_share_modal_body">
-		<div class="form-horizontal">
-			<p>By sharing this gantticc, you can access the data you've created so far on other devices. Your data will be hosted at Firebase. Pick a name to get started:</p>
-			<div class="control-group" id="prj_sharefrm_group">
-			<label class="control-label" for="project_share_id">Sharing ID: </label>
-			<div class="controls">
-				<input type="text" class="input" name="project_share_id" id="project_share_id" value="" size="12" />
-				<span class="help-inline"></span>
-			</div>
-			</div>
-			<div class="control-group">
-				<span class="help-block" id="prj_sharefrm_output">Your sharing URL will be: </span>
-				<div class="controls" style="padding-top:15px;"><button class="btn btn-primary" onclick="gantticc.shareToFirebase();">Get Sharing URL</button></div>
-			</div>
-		</div>
-	</div>
-	<div class="modal-footer">
-		<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>
-	</div>
-</div>
 </div>
 </body>
 

@@ -444,6 +444,26 @@ gantticc.exportData = function(type) {
 		}
 		return csv.join("\n");
 	}
+	else if (type === "print") {
+		var html = [];
+		var start = new Date(gantticc.project.start).getTime();
+		var end = new Date(gantticc.project.end).getTime();
+		var incTime = 1000*3600*24;
+		for (var t=start; t<=end; t+=incTime) {
+			var date = new Date(t);
+			var tasks = gantticc.project.getTasksOnDate(date);
+			if (tasks.length > 0) {
+				html.push("<h4>"+date.toDateString()+"</h4>");
+				var list = "<ul>";
+				for (var i=0; i<tasks.length; i++) {
+					list += '<li><span class="tchbx"></span><span class="ttl">'+tasks[i].title+'</span></li>';
+				}
+				list += "</ul>";
+				html.push(list);
+			}
+		}
+		return html.join("");
+	}
 	return "";
 };
 
@@ -594,6 +614,11 @@ gantticc.getCookie = function(key){
 		if (x == key) return unescape(y);
 	}
 	return "";
+};
+
+gantticc.print = function(){
+	$('#printwrap').html( gantticc.exportData("print") );
+	window.print();
 };
 
 Date.prototype.getWeekNumber = function(d) {
