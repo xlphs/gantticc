@@ -215,7 +215,7 @@ gantticc.initUI = function(){
 	$(window).on('resize', function(){  
 		gantticc.resized = true;
 	});
-	if ( $('#topbar').height() > 44) {
+	if ( $(document).width() < 420) {
 		// hide not-so-useful icons for small screen size
 		$('.hideme').each(function(){ $(this).hide(); });
 		$('#topbar-center').removeClass('span4').addClass('span8');
@@ -574,7 +574,9 @@ gantticc.getWidth = function(){
 };
 
 gantticc.getHeight = function(){
-	return $(document).height()-$('#topbar').height()-$('#botbar').height();
+	var height = $(document).height()-$('#topbar').height();
+	if ($('#botbar').is(':visible')) height -= $('#botbar').height();
+	return height;
 };
 
 gantticc.openInNewWind = function(){

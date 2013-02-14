@@ -199,7 +199,7 @@ TaskBlock.prototype = {
 		var popup_x = task.x- -1*gchart.x;
 		if ((-1*gchart.x + GANTT_UNIT_INDT_LEN) > task.x
 			|| popup_x > (stage.width - TASK_POPUP_LEN)) {
-			gchart.scrollToDate(task.startDate);
+			gchart.scrollToDate(task.startDate, 1);
 		}
 		stage.sendMessage('edit_task', {
 			tid: task.tid,
