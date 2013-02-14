@@ -153,6 +153,7 @@ gantticc.initUI = function(){
 	});
 	// setup tooltips
 	$('a[rel=tooltip]').tooltip();
+	$('button[rel=tooltip]').tooltip();
 	// setup jump-to-month dropdown
 	$('#mtab').on('click', function(){
 		var x = $('#mtab').offset().left;
@@ -531,7 +532,7 @@ gantticc.getWidth = function(){
 };
 
 gantticc.getHeight = function(){
-	return $(document).height()-$('#topbar').height()-7;
+	return $(document).height()-$('#topbar').height()-$('#botbar').height();
 };
 
 gantticc.openInNewWind = function(){
