@@ -105,15 +105,20 @@ function gchart_render(){
 			}
 			var startdate = new Date($('#project_startdate').val()).toISOString();
 			var enddate = new Date($('#project_enddate').val()).toISOString();
+			var scrollto = $('#mtab').attr('value') ? new Date($('#mtab').attr('value')) : new Date();
 			gchart.sendMessage('update_project',{
 				start_date: startdate,
-				end_date: enddate
+				end_date: enddate,
+				scroll_date: scrollto
 			});
 			gchart.sendMessage('init_tasks',{
 				tasks: gantticc.project.tasks
 			});
 			// now that everything's ready, show intro if necessary
-			gantticc.showIntro();
+			if (!gantticc.loaded) {
+				gantticc.showIntro();
+			}
+			gantticc.loaded = true;
 		});
 		gchart.on('message:edit_task', function(data){
 			var task = gantticc.project.getTask(data.tid);

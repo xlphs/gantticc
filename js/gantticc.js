@@ -274,7 +274,6 @@ gantticc.init = function(){
 					gantticc.projects.push(prj);
 				}
 				gantticc.updateSharingStatus();
-				gantticc.loaded = true;
 			}
 			gchart_render();
 		});
@@ -282,7 +281,6 @@ gantticc.init = function(){
 		// load straight from local storage and render
 		gantticc.firebaseId = "";
 		gantticc.loadDataFromLocalStorage();
-		gantticc.loaded = true;
 		gchart_render();
 	}
 };
