@@ -29,7 +29,7 @@ var gantticc = {
 	header_color: ["#19629b", "#3f9ccb"],
 	gray: ["#e5e5e5", "#f2f2f2"],
 	blue: ["#bee1ef", "#d4effc"],
-	orange: ["#ff944d", "#ffa264"]
+	orange: ["#ff944d", "#ffa964"]
 };
 
 // global click lock, set to 1 to prevent click response

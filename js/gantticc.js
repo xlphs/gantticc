@@ -236,7 +236,7 @@ gantticc.init = function(){
 	gantticc.colorValues = {
 		gray: ["#e5e5e5", "#f2f2f2"],
 		blue: ["#bee1ef", "#d4effc"],
-		orange: ["#ff944d", "#ffa264"]
+		orange: ["#ff944d", "#ffa964"]
 	};
 	gantticc.firebaseUrl = "https://gantticc.firebaseio.com/";
 	gantticc.firebasePasscode = "";
