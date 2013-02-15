@@ -36,6 +36,8 @@ var gantticc = {
 var ganttClickLock = 0;
 // for double click
 var ganttClickCount  = 0;
+// for counting number of fingers
+var ganttTouchCount = 0;
 var ganttClickX = ganttClickY = 0;
 
 // constructor
@@ -362,14 +364,16 @@ Gantt.prototype = {
 		stage.on('pointerdown', function(e){
 			if (ganttClickLock != 0) return;
 			if (e.x < GANTT_UNIT_INDT_LEN) return;
+			if (ganttTouchCount > 1) return;
 			ganttClickCount++;
 			moving = 2;
 			x_start = e.x;
 			y_start = e.y;
 			ganttClickX = e.x;
 			ganttClickY = e.y;
-			// watch out for double click/tap
+			// no clicking handling in heatmap mode
 			if (_gantt.mode !== "gantt") return;
+			// watch out for double click/tap
 			setTimeout(function() {
 				if (ganttClickCount == 2) {
 					gchart.addNewTask(ganttClickX, ganttClickY);
@@ -402,6 +406,7 @@ Gantt.prototype = {
 				}
 			} else if (moving == 2) {
 				ganttClickCount = 0;
+				if (ganttTouchCount > 1) return;
 				var diff_x = x_start - e.x;
 				var diff_y = y_start - e.y;
 				if (Math.abs(diff_x) > Math.abs(diff_y)) {
@@ -494,6 +499,30 @@ Gantt.prototype = {
 			var span = (_task.weekspan === null) ? _task.dayspan : Math.ceil(_task.weekspan);
 			if (Math.abs(e.x - _task.x - _gantt.x - span*GANTT_DAY_BLK_LEN) < 7) {
 				mode = 2;
+			}
+		});
+		stage.on('multi:pointerdown', function(e){
+			if (ganttClickLock != 0) return;
+			ganttTouchCount++;
+			ganttClickX = e.x;
+			ganttClickY = e.y;
+		});
+		stage.on('multi:pointerup', function(e){
+			if (ganttClickLock != 0) return;
+			var touchCount = ganttTouchCount;
+			ganttTouchCount--;
+			if (ganttTouchCount < 0) ganttTouchCount = 0;
+			if (touchCount == 2) {
+				// detect 2-finger swipe: switch to/from heatmap
+				var diffX = e.x - ganttClickX;
+				if (diffX > stage.width/4) {
+					var status = 'on';
+					if (_gantt.mode === 'heatmap') status = 'off';
+					stage.sendMessage('update_heatmap', {
+						unit: _gantt.unit,
+						status: status
+					});
+				}
 			}
 		});
 		// END click handling code

@@ -160,6 +160,9 @@ function gchart_render(){
 			var cur = new Date(data.date);
 			gantticc.updateCurrentMonthBtn(cur);
 		});
+		gchart.on('message:update_heatmap', function(data){
+			project_heatmap(data.unit);
+		});
 	});
 	// apply data into ui
 	gantticc.applyCurrentProject();
