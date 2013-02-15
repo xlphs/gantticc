@@ -87,15 +87,18 @@ Project.prototype = {
 		this.saveTasks();
 	},
 	addDummyTask: function(){
+		var today = new Date();
+		var start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 		this.tasks.push({
 			tid: "1",
 			title: "New Task",
 			color: "gray",
-			start: new Date().toISOString(),
-			end: new Date(new Date().getTime() + 1000*3600*24*2).toISOString(),
+			start: start.toISOString(),
+			end: new Date(start.getTime() + 1000*3600*24*2).toISOString(),
 			row: "1",
 			notes: "Random notes"
 		});
+		console.log();
 	},
 	getTasksOnDate: function(date){
 		var tasks = [];
@@ -197,7 +200,7 @@ gantticc.initUI = function(){
 			if (gantticc.listenKey && !$('#task_form').is(':visible')) set_scale("week");
 		} else if (e.keyCode == 82) {
 			// r to resize chart
-			if (gantticc.resized) {
+			if (gantticc.listenKey && gantticc.resized) {
 				gchart.destroy();
 				gchart_render();
 				gantticc.resized = false;
