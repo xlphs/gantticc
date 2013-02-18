@@ -98,7 +98,6 @@ Project.prototype = {
 			row: "1",
 			notes: "Random notes"
 		});
-		console.log();
 	},
 	getTasksOnDate: function(date){
 		var tasks = [];
@@ -251,8 +250,8 @@ gantticc.init = function(){
 	if ((typeof Storage) !== "undefined") {
 		gantticc.localstorage = 1;
 	} else {
-		// no local storage, probably show an alert or something
-		console.log("Error: local storage not supported!");
+		// no local storage (TODO: show a nicer alert)
+		alert("Local storage not supported by your browser. If you wish to save your data, please save it online.");
 		gantticc.localstorage = 0;
 	}
 	

@@ -14,7 +14,6 @@ function(err){
 	// error callback
 	var gantt = document.getElementById("gantt");
 	gantt.innerHTML = "Error occurred while loading required scripts, please try again later.";
-	console.log(err);
 });
 
 var gchart;
