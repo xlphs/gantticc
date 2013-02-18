@@ -96,7 +96,7 @@
 </div></div>
 <div class="row-fluid"><div id="gantt"><p>Loading, please wait...</p></div></div>
 <div id="botbar" class="hideme row-fluid btn-toolbar"><div class="botbar-inner">
-	<button class="btn btn-small" style="margin-right:5px;" href="#gantticc_help_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="top" data-original-title="Help">
+	<button class="btn btn-small" style="margin-right:5px;" onclick="$('#gantticc_help_modal').modal('show');" role="button" data-toggle="modal" rel="tooltip" data-placement="top" data-original-title="Help">
 		<span class="icon-question-sign"></span>
 	</button>
 	<div class="btn-group">
@@ -116,7 +116,7 @@
 		<button tabindex="-1" class="btn btn-small disabled">resize</button>
 	</div>
 	<div class="pull-right">
-		<button class="btn btn-small" href="#project_share_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="top" data-original-title="Save">
+		<button class="btn btn-small" onclick="$('#project_share_modal').modal('show');" role="button" data-toggle="modal" rel="tooltip" data-placement="top" data-original-title="Save">
 			<span class="icon-bookmark"></span>
 		</button>
 	</div>
