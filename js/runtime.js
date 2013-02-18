@@ -1,12 +1,27 @@
-var gchart;
-
-$(function(){
+require.config({
+	paths:{
+		'firebase':'https://cdn.firebase.com/v0/firebase'
+	},
+	waitSeconds:30
+});
+require(["jquery", "firebase", "bootstrap.min", "bootstrap-datepicker.min", "gantticc.min", "bonsai.min"],
+function($){
 	// ---- Entry point ----
 	gantticc.initUI();
 	gantticc.init();
+},
+function(err){
+	// error callback
+	var gantt = document.getElementById("gantt");
+	gantt.innerHTML = "Error occurred while loading required scripts, please try again later.";
+	console.log(err);
 });
 
+var gchart;
+
 function gchart_render(){
+	$('#gantt').empty();
+	
 	gchart = bonsai.run(document.getElementById('gantt'),{
 		url: 'js/gchart.min.js?bustcache='+Math.random(),
 		width: gantticc.getWidth(),
