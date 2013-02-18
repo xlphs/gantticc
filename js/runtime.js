@@ -8,7 +8,7 @@ $(function(){
 
 function gchart_render(){
 	gchart = bonsai.run(document.getElementById('gantt'),{
-		url: 'js/gchart.js?bustcache='+Math.random(),
+		url: 'js/gchart.min.js?bustcache='+Math.random(),
 		width: gantticc.getWidth(),
 		height: gantticc.getHeight(),
 		code: function(){
