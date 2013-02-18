@@ -15,4 +15,4 @@ Try it live at [Gantticc](http://gantti.cc/).
 
 #### Note
 
-Supports Chrome (24), Firefox (18), Safari (5), Opera (12), IE(10).
+Supports Chrome (24), Firefox (18), Safari (5), Opera (12).
