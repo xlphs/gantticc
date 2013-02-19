@@ -107,6 +107,23 @@ function project_new(){
 	gchart.sendMessage('init_tasks',{
 		tasks: gantticc.project.tasks
 	});
+	if ( $('#settings').is(":hidden") ){
+		$('#settings_toggler').removeClass("icon-arrow-down").addClass("icon-arrow-up");
+		$('#settings').slideDown();
+	}
+	$('#project_title_txtfield').attr('placeholder', $('#project_title_txtfield').val()).val('').focus()
+	.bind('keypress.newprj', function(e){
+		// a temporary listener for enter key
+		if (e.keyCode == 13) {
+			project_update();
+			$('#project_title_txtfield').unbind('keypress.newprj').blur();
+		}
+	})
+	.bind('blur.newprj', function(e){
+		// remove all listeners when textfield is not active
+		$('#project_title_txtfield').unbind('keypress.newprj');
+		$('#project_title_txtfield').unbind('blur.newprj');
+	});
 }
 
 function project_load(pid){

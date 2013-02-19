@@ -544,6 +544,8 @@ gantticc.loadAllProjects = function(){
 
 gantticc.updateProjectList = function(){
 	var list = [];
+	list.push("<li><a href=\"#\" onclick=\"project_new();\">Create New Project</a></li>");
+	list.push("<li class=\"divider\"></li>");
 	for (var i=0; i<gantticc.projects.length; i++) {
 		var prj = gantticc.projects[i];
 		var str = "<li><a href=\"#\" onclick=\"project_load('"+prj.pid+"');\">";
@@ -555,8 +557,6 @@ gantticc.updateProjectList = function(){
 		str += "<span><span></a></li>";
 		list.push(str);
 	}
-	list.push("<li class=\"divider\"></li>");
-	list.push("<li><a href=\"#\" onclick=\"project_new();\">Create New Project</a></li>");
 	$('#project_list').html(list.join(""));
 };
 

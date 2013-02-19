@@ -18,13 +18,7 @@
 <div id="settings" class="container-fluid">
 	<div class="row-fluid"><div class="span12 form-inline" style="padding:10px;">
 		<label for="project_title">Project: </label>
-		<div class="input-prepend">
-			<div class="btn-group">
-				<button class="btn dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
-				<ul id="project_list" class="dropdown-menu" role="menu" aria-labelledby="project_sel_menu"></ul>
-			</div>
-			<input type="text" id="project_title_txtfield" name="project_title" value="" />
-		</div>
+		<input type="text" id="project_title_txtfield" name="project_title" value="" placeholder="" />
 		<label for="project_startdate">Start: </label>
 		<input type="text" class="input-small datepickr" name="project_startdate" id="project_startdate" value="" size="12" />
 		<label for="project_enddate">End: </label>
@@ -38,23 +32,23 @@
 		<a class="btn" href="#project_info_modal" role="button" data-toggle="modal" rel="tooltip" data-placement="bottom" data-original-title="Project Info">
 			<span class="icon-info-sign"></span>
 		</a>
-		<a class="btn" href="#" onclick="gantticc.print();" role="button" rel="tooltip" data-placement="bottom" data-original-title="Print">
+		<button class="btn" onclick="gantticc.print();" rel="tooltip" data-placement="bottom" data-original-title="Print">
 			<span class="icon-print"></span>
-		</a>
+		</button>
 	</div></div>
 </div>
 <div id="topbar" class="row-fluid"><div class="topbar-inner">
 	<div class="span4">
 		<div style="padding-left:10px;">
-		<a class="btn" onclick="toggle_settings();" href="#">
+		<button class="btn" onclick="toggle_settings();">
 			<span id="settings_toggler" class="icon-arrow-down"></span>
-		</a></div>
+		</button></div>
 	</div>
 	<div class="span4" id="topbar-center" style="text-align:center;"><div>
 		<button class="btn" onclick="gchart_jump('left');">
 			<span class="icon-arrow-left"></span>
 		</button>
-		<button id="mtab" class="btn" href="#" value="" data-placement="bottom" data-original-title="Jump to"></button>
+		<button id="mtab" class="btn" value="" data-placement="bottom" data-original-title="Jump to"></button>
 		<button class="btn" onclick="gchart_jump('right');">
 			<span class="icon-arrow-right"></span>
 		</button>
@@ -63,10 +57,10 @@
 	<div class="span4 hideme" style="text-align:right;">
 		<div style="padding-right:10px;">
 		<div class="btn-group" style="text-align:left;">
-			<a href="#" id="task_color_sel_menu" role="button" class="btn dropdown-toggle" data-toggle="dropdown">
+			<button id="task_color_sel_menu" class="btn dropdown-toggle" data-toggle="dropdown">
 				<span class="icon-adjust"></span>
 				<b class="caret"></b>
-			</a>
+			</button>
 			<ul class="dropdown-menu" style="min-width:66px;" role="menu" aria-labelledby="task_color_sel_menu">
 				<li><a tabindex="-1" onclick="toggle_swatch_color('gray');" href="#">
 					<span class="swatch_block swatch_gray"></span><span class="swatch_check swatch_checked">&#10003;</span>
@@ -80,10 +74,10 @@
 			</ul>
 		</div>
 		<div class="btn-group" style="text-align:left;">
-			<a href="#" id="view_mode" role="button" class="btn dropdown-toggle" data-toggle="dropdown">
+			<button id="view_mode" class="btn dropdown-toggle" data-toggle="dropdown">
 				<span class="icon-eye-open"></span>
 				<b class="caret"></b>
-			</a>
+			</button>
 			<ul class="dropdown-menu pull-right" role="menu" aria-labelledby="view_mode">
 				<li><a tabindex="-1" href="#" onclick="set_scale('day');">Day</a></li>
 				<li><a tabindex="-1" href="#" onclick="set_scale('week');">Week</a></li>
@@ -96,9 +90,22 @@
 </div></div>
 <div class="row-fluid"><div id="gantt"><p>Loading, please wait...</p></div></div>
 <div id="botbar" class="hideme row-fluid btn-toolbar"><div class="botbar-inner">
-	<button class="btn btn-small" style="margin-right:5px;" onclick="$('#gantticc_help_modal').modal('show');" role="button" data-toggle="modal" rel="tooltip" data-placement="top" data-original-title="Help">
-		<span class="icon-question-sign"></span>
-	</button>
+	<div class="btn-group dropup">
+		<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+			<span class="icon-home"></span>
+			<b class="caret"></b>
+		</button>
+		<ul class="dropdown-menu" role="menu" aria-labelledby="home_menu">
+			<li class="dropdown-submenu">
+				<a href="#" tabindex="-1">My Projects</a>
+				<ul id="project_list" class="dropdown-menu" role="menu" aria-labelledby="project_list_menu"></ul>
+			</li>
+			<li class="divider"></li>
+			<li><a href="#" tabindex="-1" onclick="$('#project_share_modal').modal('show');">Storage</a></li>
+			<li class="divider"></li>
+			<li><a href="#" tabindex="-1" onclick="$('#gantticc_help_modal').modal('show');">Help</a></li>
+		</ul>
+	</div>
 	<div class="btn-group">
 		<button tabindex="-1" class="btn btn-small disabled">h</button>
 		<button tabindex="-1" class="btn btn-small disabled">heat map</button>
@@ -115,11 +122,7 @@
 		<button tabindex="-1" class="btn btn-small disabled">r</button>
 		<button tabindex="-1" class="btn btn-small disabled">resize</button>
 	</div>
-	<div class="pull-right">
-		<button class="btn btn-small" onclick="$('#project_share_modal').modal('show');" role="button" data-toggle="modal" rel="tooltip" data-placement="top" data-original-title="Save">
-			<span class="icon-bookmark"></span>
-		</button>
-	</div>
+	<div class="pull-right"></div>
 </div></div>
 <div id="task_form">
 	<div style="width:100%;padding:0 5px 3px 0;">
