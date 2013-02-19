@@ -11,7 +11,7 @@ Try it live at [Gantticc](http://gantti.cc/).
 - Multiple projects
 - Local storage or hosted online at [Firebase](https://www.firebase.com/)
 - Export as CSV
-- Print (works best in Chrome/FF)
+- Print
 
 #### Note
 
