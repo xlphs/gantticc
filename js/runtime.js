@@ -322,6 +322,6 @@ function gchart_print() {
 	var newViewBox = xOffset+' -0.5 '+gantticc.getHeight()+' '+gantticc.getWidth();
 	// update viewbox, add svg to DOM
 	svgContents = svgContents.replace(viewBox, newViewBox);
-	$('#svgctx').html(svgContents);
+	$('#printwrap').html(svgContents);
 	window.print();
 }

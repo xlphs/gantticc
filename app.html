@@ -97,7 +97,13 @@
 				<a href="#" tabindex="-1">My Projects</a>
 				<ul id="project_list" class="dropdown-menu" role="menu" aria-labelledby="project_list_menu"></ul>
 			</li>
-			<li><a href="#" tabindex="-1" onclick="gchart_print();">Print</a></li>
+			<li class="dropdown-submenu">
+				<a href="#" tabindex="-1">Print</a>
+				<ul class="dropdown-menu" role="menu" aria-labelledby="print_menu">
+					<li><a href="#" tabindex="-1" onclick="gantticc.print();">Agenda</a></li>
+					<li><a href="#" tabindex="-1" onclick="gchart_print();">Chart</a></li>
+				</ul>
+			</li>
 			<li><a href="#" tabindex="-1" onclick="$('#project_share_modal').modal('show');">Storage</a></li>
 			<li class="divider"></li>
 			<li><a href="#" tabindex="-1" onclick="$('#gantticc_help_modal').modal('show');">Help</a></li>
@@ -248,7 +254,7 @@
 </div>
 </body>
 
-<script data-main="js/runtime.min" src="js/require-jquery.js"></script>
+<script data-main="js/runtime" src="js/require-jquery.js"></script>
 <script type="text/javascript">
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-38177257-1']);
