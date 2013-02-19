@@ -7,7 +7,7 @@ require.config({
 	},
 	waitSeconds:10
 });
-require(["jquery", "firebase", "bootstrap.min", "bootstrap-datepicker.min", "bonsai.min", "gantticc"],
+require(["jquery", "firebase", "bootstrap.min", "bootstrap-datepicker.min", "bonsai.min", "gantticc.min"],
 function($){
 	// ---- Entry point ----
 	gantticc.initUI();
@@ -43,6 +43,7 @@ function task_form_submit(){
 	var task = gantticc.project.getTask($('#title_tid').val());
 	if (task == null) return;
 	task.title = $('#title_txtfield').val();
+	if (task.title.length < 1) task.title = $('#title_txtfield').attr('placeholder');
 	task.color = $('#task_color').val();
 	task.notes = $('#notes_txtfield').val();
 	gchart.sendMessage('update_task',{
@@ -79,6 +80,9 @@ function project_update(nosave){
 		scroll_date: current
 	});
 	gantticc.project.title = $('#project_title_txtfield').val();
+	if (gantticc.project.title.length < 1) {
+		gantticc.project.title = $('#project_title_txtfield').attr('placeholder');
+	}
 	gantticc.project.start = startdate;
 	gantticc.project.end = enddate;
 	if (!nosave) {
@@ -299,4 +303,25 @@ function project_heatmap(unit, update){
 		end: new Date(end).toISOString()
 	}
 	gantticc.updateJumpMonthMenu(gantticc.heatmap.start, gantticc.heatmap.end);
+}
+
+function gchart_print() {
+	$('svg[data-bs-id]').attr('xmlns', 'http://www.w3.org/2000/svg')
+	.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+	var svgContents = $('#gantt').children().first().html();
+	var start, end;
+	start = svgContents.indexOf('viewBox=');
+	start += 9;
+	end = svgContents.indexOf('xmlns=');
+	end -= 2;
+	var viewBox = svgContents.substr(start, end-start);
+	// calculate x offset
+	var scrollPos = new Date($('#mtab').attr('value')).getTime();
+	var startPos = new Date(gantticc.project.start).getTime();
+	var xOffset = Math.floor((scrollPos - startPos)/1000/3600/24) * 30;
+	var newViewBox = xOffset+' -0.5 '+gantticc.getHeight()+' '+gantticc.getWidth();
+	// update viewbox, add svg to DOM
+	svgContents = svgContents.replace(viewBox, newViewBox);
+	$('#svgctx').html(svgContents);
+	window.print();
 }

@@ -658,6 +658,7 @@ gantticc.exportData = function(type) {
 		return csv.join("\n");
 	}
 	else if (type === "print") {
+		// export as agenda
 		var html = [];
 		var start = new Date(gantticc.project.start).getTime();
 		var end = new Date(gantticc.project.end).getTime();
