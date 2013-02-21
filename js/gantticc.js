@@ -452,6 +452,9 @@ gantticc.render = function(){
 		gchart.on('message:update_heatmap', function(data){
 			project_heatmap(data.unit);
 		});
+		gchart.on('message:update_project', function(data){
+			project_load(data.pid.toString());
+		});
 	});
 	// apply data into ui
 	gantticc.applyCurrentProject();

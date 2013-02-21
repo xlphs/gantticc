@@ -371,13 +371,17 @@ Gantt.prototype = {
 			y_start = e.y;
 			ganttClickX = e.x;
 			ganttClickY = e.y;
-			// no clicking handling in heatmap mode
-			if (_gantt.mode !== "gantt") return;
 			// watch out for double click/tap
 			setTimeout(function() {
 				if (ganttClickCount == 2) {
-					gchart.addNewTask(ganttClickX, ganttClickY);
-					mode = 0;
+					if (_gantt.mode === "gantt") {
+						gchart.addNewTask(ganttClickX, ganttClickY);
+						mode = 0;
+					} else {
+						// offset by count 2 (index starts at 1 and Total takes up 1)
+						var pid = Math.floor(ganttClickY/60)-2;
+						if (pid >= 0) stage.sendMessage('update_project', { pid: pid });
+					}
 				}
 				ganttClickCount = 0;
 			}, 500);
@@ -837,8 +841,8 @@ Gantt.prototype = {
 				y: task.y-15,
 				visible: true
 			});
-		});
-		stage.on('heatmapblkmsout', function(task, e){
+		})
+		.on('heatmapblkmsout', function(task, e){
 			_gantt.tooltip_group.attr('visible', false);
 		});
 	},
