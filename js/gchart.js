@@ -374,9 +374,9 @@ Gantt.prototype = {
 			// watch out for double click/tap
 			setTimeout(function() {
 				if (ganttClickCount == 2) {
+					mode = 0;
 					if (_gantt.mode === "gantt") {
 						gchart.addNewTask(ganttClickX, ganttClickY);
-						mode = 0;
 					} else {
 						// offset by count 2 (index starts at 1 and Total takes up 1)
 						var pid = Math.floor(ganttClickY/60)-2;
@@ -424,6 +424,7 @@ Gantt.prototype = {
 			}
 		});
 		stage.on('pointerup', function(e){
+			if (ganttTouchCount > 0) ganttTouchCount--;
 			if (moving == 1 && _task != null) {
 				if (mode == 0) {
 					// handle single click, modify the task
@@ -512,7 +513,6 @@ Gantt.prototype = {
 			ganttClickY = e.y;
 		});
 		stage.on('multi:pointerup', function(e){
-			if (ganttClickLock != 0) return;
 			var touchCount = ganttTouchCount;
 			ganttTouchCount--;
 			if (ganttTouchCount < 0) ganttTouchCount = 0;
