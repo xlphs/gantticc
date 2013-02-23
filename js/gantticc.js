@@ -453,7 +453,16 @@ gantticc.render = function(){
 			project_heatmap(data.unit);
 		});
 		gchart.on('message:update_project', function(data){
+			var to = new Date($('#mtab').attr('value'));
 			project_load(data.pid.toString());
+			var start = new Date(gantticc.project.start);
+			var end = new Date(gantticc.project.end);
+			if (to > end) return;
+			if (to < start){
+				// jump to first day of project
+				to = start;
+			}
+			gchart_scroll(to);
 		});
 	});
 	// apply data into ui
@@ -518,6 +527,7 @@ gantticc.youShallNotPass = function(submit){
 		} else {
 			gantticc.listenKey = false; // disable hotkeys
 			$('#project_passcode_modal').modal('show');
+			$('#passcode').focus();
 		}
 		return gantticc.authenticated;
 	}

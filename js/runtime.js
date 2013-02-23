@@ -135,8 +135,6 @@ function project_load(pid){
 	gchart.sendMessage('init_tasks',{
 		tasks: gantticc.project.tasks
 	});
-	gantticc.resetHeatmap();
-	gantticc.resetSwatch();
 }
 
 function gchart_jump(dir){
