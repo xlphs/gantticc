@@ -250,8 +250,15 @@ TaskBlock.prototype = {
 		var start = new Date(start_date).getTime();
 		var end = new Date(end_date).getTime();
 		var diff = Math.abs(end - start)/1000;
+		if (new Date(start_date).dst()) {
+			start += 3600*1000;
+		}
+		if (new Date(end_date).dst()) {
+			end += 3600*1000;
+		}
 		// minimum length is 1 day
-		return Math.floor(diff/(3600*24)) + 1;
+		var len = Math.ceil(diff/(3600*24)) + 1;
+		return len;
 	},
 	calculateWeekSpan: function(start_date, end_date) {
 		var start = new Date(start_date).getTime();
@@ -442,10 +449,11 @@ Gantt.prototype = {
 							easing: 'sineOut'
 						});
 						// calculate new end date
+						var startTime = _task.startDate.getTime();
 						if (_task.weekspan === null) {
-							_task.endDate = new Date(_task.startDate.getTime() + 1000*3600*24*(_task.dayspan-1));
+							_task.endDate = new Date(startTime + 1000*3600*24*(_task.dayspan-1));
 						} else {
-							_task.endDate = new Date(_task.startDate.getTime() + 1000*3600*24*7*_task.weekspan);
+							_task.endDate = new Date(startTime + 1000*3600*24*7*_task.weekspan);
 						}
 						stage.sendMessage('update_task', {
 							tid: _task.tid,
@@ -465,12 +473,15 @@ Gantt.prototype = {
 					_task.bg_asset.attr('width', _task.width);
 					_task.endDate = _task.calculateDateFromX(_task.x+_task.width-GANTT_DAY_BLK_LEN);
 					if (_task.weekspan === null) {
-						_task.dayspan = _task.calculateDaySpan(_task.startDate, _task.endDate);
+						_task.dayspan = _task.calculateDaySpan(_task.endDate, _task.startDate);
 					} else {
 						_task.endDate = _task.calculateDateFromX(_task.x+_task.width);
 						// decrement by one day
 						var endDate = new Date(_task.endDate).getTime();
 						endDate -= 1000*3600*24;
+						if (new Date(_task.endDate).dst()) {
+							endDate += 1000*3600;
+						}
 						_task.endDate = new Date(endDate);
 						_task.weekspan = _task.calculateWeekSpan(_task.startDate, _task.endDate);
 					}
@@ -502,7 +513,8 @@ Gantt.prototype = {
 			_task = task;
 			// check if user is clicking on the right edge
 			var span = (_task.weekspan === null) ? _task.dayspan : Math.ceil(_task.weekspan);
-			if (Math.abs(e.x - _task.x - _gantt.x - span*GANTT_DAY_BLK_LEN) < 7) {
+			var diff = Math.abs(e.x - _task.x - _gantt.x - span*GANTT_DAY_BLK_LEN);
+			if (diff < 7) {
 				mode = 2;
 			}
 		});
@@ -1003,6 +1015,13 @@ Date.prototype.getLiteralMonth = function(m) {
 	    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
 	return monthNames[m];
 }
-
+Date.prototype.stdTimezoneOffset = function() {
+    var jan = new Date(this.getFullYear(), 0, 1);
+    var jul = new Date(this.getFullYear(), 6, 1);
+    return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+}
+Date.prototype.dst = function() {
+    return this.getTimezoneOffset() < this.stdTimezoneOffset();
+}
 // The entry point
 var gchart = new Gantt(0, 0);

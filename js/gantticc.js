@@ -107,10 +107,18 @@ Project.prototype = {
 	getTasksOnDate: function(date){
 		var tasks = [];
 		var d = date.getTime();
+		var dst = new Date(date).dst();
+		
 		for (var i=0; i<this.tasks.length; i++) {
 			var t = this.tasks[i];
 			var start = new Date(t.start).getTime();
 			var end = new Date(t.end).getTime();
+			if (new Date(t.start).dst()) {
+				start += 1000*3600;
+			}
+			if (new Date(t.end).dst()) {
+				end += 1000*3600;
+			}
 			if (start <= d && end >= d) {
 				tasks.push($.extend(true, {}, t)); // return copy
 			}
@@ -911,3 +919,11 @@ Date.prototype.getWeekNumber = function(d) {
 	var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
 	return weekNo;
 };
+Date.prototype.stdTimezoneOffset = function() {
+    var jan = new Date(this.getFullYear(), 0, 1);
+    var jul = new Date(this.getFullYear(), 6, 1);
+    return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+}
+Date.prototype.dst = function() {
+    return this.getTimezoneOffset() < this.stdTimezoneOffset();
+}
