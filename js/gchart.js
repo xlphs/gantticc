@@ -26,6 +26,7 @@ var gantticc = {
 	dates: [], // DateBlocks
 	tasks: [], // TaskBlocks
 	// predefined colors and their highlights
+	today_color: "#f0f5f7",
 	header_color: ["#19629b", "#3f9ccb"],
 	gray: ["#e5e5e5", "#f2f2f2"],
 	blue: ["#bee1ef", "#d4effc"],
@@ -141,10 +142,8 @@ TaskBlock.prototype = {
 			});
 			return;
 		} else {
-			bg = new Rect(0, 0, GANTT_DAY_BLK_LEN*span, GANTT_TASK_BLK_HGT, 4)
+			bg = new Rect(0, 0, GANTT_DAY_BLK_LEN*span, GANTT_TASK_BLK_HGT)
 				.attr({
-					strokeColor: '#d4d4d4',
-					strokeWidth: 2,
 					filters: filter.blur(0)
 				})
 				.fill(color.parse(colorHex))
@@ -154,12 +153,16 @@ TaskBlock.prototype = {
 		
 		group.on('mouseover', function(e){
 			var c = gantticc[_task.color][1];
-			_task.bg_asset.fill(color.parse(c));
+			_task.bg_asset.animate('0.2s', {
+				fillColor: color.parse(c)
+			});
 			_task.edgeDrag_asset.attr({opacity: 1});
 		})
 		.on('mouseout', function(e){
 			var c = gantticc[_task.color][0];
-			_task.bg_asset.fill(color.parse(c));
+			_task.bg_asset.animate('0.2s', {
+				fillColor: color.parse(c)
+			});
 			_task.edgeDrag_asset.attr({opacity: 0});
 		})
 		.on('pointerdown', function(e){
@@ -174,8 +177,8 @@ TaskBlock.prototype = {
 		if (OFFSET_TXT_VERT_ALIGN) title_y += 11;
 		
 		if (_task.notes) {
-			_task.addIndicatorIcon(group, 'assets/task_list_16.png', 5, 7, 16, 16);
-			title_x += 16;
+			_task.addIndicatorIcon(group);
+			title_x += 2;
 		}
 		
 		var text = new Text(_task.title).addTo(group);
@@ -187,14 +190,14 @@ TaskBlock.prototype = {
 		});
 		
 		_task.edgeDrag_asset = new Group().attr({
-			x: this.width-3, y: 0, opacity: 0
+			x: _task.width-3, y: 0, opacity: 0
 		}).addTo(group);
-		var edgeLine1 = new Rect(0, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
-		edgeLine1.fill(color.parse('#bbb'));
-		var edgeLine1 = new Rect(2, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
-		edgeLine1.fill(color.parse('#eee'));
-		var edgeLine2 = new Rect(4, 7, 2, GANTT_TASK_BLK_HGT-14).addTo(_task.edgeDrag_asset);
-		edgeLine2.fill(color.parse('#bbb'));
+		var edgeLine = new Rect(0, 0, 3, GANTT_TASK_BLK_HGT)
+			.attr({
+				filters: filter.blur(0)
+			})
+		.fill( color.parse("rgba(0,0,0,0.5)") )
+		.addTo(_task.edgeDrag_asset);
 	},
 	showEditForm: function(task, gchart, x, y) {
 		// scroll to position the popup inside chart
@@ -215,30 +218,27 @@ TaskBlock.prototype = {
 		var c = gantticc[hexColor][0];
 		this.bg_asset.fill(color.parse(c));
 	},
-	addIndicatorIcon: function(context, imgPath, x, y, w, h) {
-		this.indicator_asset = new Bitmap(imgPath, function(err) {
-		  if (err) return;
-		  new Rect(0, 0, w, h).attr({
-		    fillImage: this.attr({
-				width: w, height: h
-		    }),
-			x: x, y: y
-		  }).addTo(context);
-		});
+	addIndicatorIcon: function(context) {
+		this.indicator_asset = new Rect(0, 0, 3, GANTT_TASK_BLK_HGT)
+			.attr({
+				filters: filter.blur(0)
+			})
+		.fill( color.parse("rgba(0,0,0,0.5)") )
+		.addTo(context);
 	},
 	updateIndicatorIcon: function(notes) {
 		var _task = this;
 		if (notes.length > 0) {
-			// show/add icon, shift title right
+			// show/add indicator, shift title right
 			if ( (typeof _task.indicator_asset) == 'undefined') {
-				_task.addIndicatorIcon(_task.group_asset, 'assets/task_list_16.png', 5, 7, 16, 16);
+				_task.addIndicatorIcon(_task.group_asset);
 			} else {
 				_task.indicator_asset.attr({ visible: true });
 			}
-			_task.title_asset.attr({ x: 24});
+			_task.title_asset.attr({ x: 10 });
 			_task.notes = "show";
 		} else {
-			// hide the icon, shift title left
+			// hide the indicator, shift title left
 			if ( (typeof _task.indicator_asset) != 'undefined') {
 				_task.indicator_asset.attr({ visible: false });
 			}
@@ -749,8 +749,8 @@ Gantt.prototype = {
 		if (today_x >= 0) {
 			var mark = new Rect(today_x+1, 0, GANTT_DAY_BLK_LEN-1, stage.height).addTo(this.bg);
 			var mark2 = new Rect(today_x+1, -1, GANTT_DAY_BLK_LEN-1, GANTT_TASK_BLK_HGT).addBefore(gantticc.dates[0].textAsset);
-			mark.fill('#eee');
-			mark2.fill('#eee');
+			mark.fill(gantticc.today_color);
+			mark2.fill(gantticc.today_color);
 		}
 		// update total width
 		this.width = daycount*GANTT_DAY_BLK_LEN;
