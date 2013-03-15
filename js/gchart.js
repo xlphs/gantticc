@@ -516,6 +516,8 @@ Gantt.prototype = {
 			var diff = Math.abs(e.x - _task.x - _gantt.x - span*GANTT_DAY_BLK_LEN);
 			if (diff < 7) {
 				mode = 2;
+			} else {
+				mode = 0;
 			}
 		});
 		stage.on('multi:pointerdown', function(e){
