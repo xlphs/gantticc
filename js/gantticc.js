@@ -369,6 +369,15 @@ gantticc.render = function(){
 				var date = new Date(data.date);
 				gchart.scrollToDate(date, 1);
 			});
+			stage.on('message:scroll_to_task', function(data){
+				// vertically center on the given task
+				var task = data.task;
+				if (parseInt(task.row)*GANTT_TASK_BLK_HGT > Math.floor(stage.height/2)) {
+					var diff = parseInt(task.row)*GANTT_TASK_BLK_HGT - Math.floor(stage.height/2);
+					diff = Math.ceil( diff/GANTT_TASK_BLK_HGT ) * GANTT_TASK_BLK_HGT;
+					gchart.scrollY(diff);
+				}
+			});
 			stage.on('message:set_swatch', function(data){
 				gchart.highlightTaskByColor(data.color, data.status);
 			});
@@ -402,7 +411,9 @@ gantticc.render = function(){
 			}
 			var startdate = new Date($('#project_startdate').val()).toISOString();
 			var enddate = new Date($('#project_enddate').val()).toISOString();
-			var scrollto = $('#mtab').attr('value') ? new Date($('#mtab').attr('value')) : new Date();
+			var today = new Date();
+			var scrollto = $('#mtab').attr('value') ? new Date($('#mtab').attr('value')) : today;
+			var todaytasks = gantticc.project.getTasksOnDate( new Date() );
 			gchart.sendMessage('update_project',{
 				start_date: startdate,
 				end_date: enddate,
@@ -411,6 +422,9 @@ gantticc.render = function(){
 			gchart.sendMessage('init_tasks',{
 				tasks: gantticc.project.tasks
 			});
+			if (todaytasks.length > 0) {
+				gchart.sendMessage('scroll_to_task',{ task: todaytasks[0] });
+			}
 			// now that everything's ready, show intro if necessary
 			if (!gantticc.loaded) {
 				gantticc.showIntro();

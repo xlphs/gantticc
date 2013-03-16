@@ -206,10 +206,12 @@ TaskBlock.prototype = {
 			|| popup_x > (stage.width - TASK_POPUP_LEN)) {
 			gchart.scrollToDate(task.startDate, 1);
 		}
+		var row = Math.ceil(task.y / GANTT_TASK_BLK_HGT);
+		var ry = gchart.y + (row+1) * GANTT_TASK_BLK_HGT;
 		stage.sendMessage('edit_task', {
 			tid: task.tid,
 			x: task.x- -1*gchart.x,
-			y: task.y+GANTT_TASK_BLK_HGT
+			y: ry
 		});
 		ganttClickLock = 1;
 	},
@@ -394,6 +396,7 @@ Gantt.prototype = {
 			}, 500);
 		});
 		stage.on('pointermove', function(e){
+			if (ganttTouchCount > 1) return;
 			if (moving == 1 && _task != null) {
 				if (mode == 0) mode = 1;
 				if (mode == 1) {
@@ -403,6 +406,13 @@ Gantt.prototype = {
 						x: _task.x,
 						y: _task.y
 					});
+					var nrow = _gantt.positionSnapY( e.y - 15 );
+					// shift tasks if necessary
+					if (nrow > 0 && nrow != _task.row) {
+						var dir = (nrow > _task.row) ? -1:1;
+						_gantt.shiftTasksByRow(nrow, dir, _task.tid);
+						_task.row = nrow;
+					}
 				} else if (mode == 2) {
 					// move the right edge of task bubble
 					if (_gantt.unit === "day") {
@@ -431,15 +441,13 @@ Gantt.prototype = {
 			}
 		});
 		stage.on('pointerup', function(e){
-			if (ganttTouchCount > 0) ganttTouchCount--;
 			if (moving == 1 && _task != null) {
 				if (mode == 0) {
 					// handle single click, modify the task
 					_task.showEditForm(_task, _gantt, e.x, e.y);
 				} else if (mode == 1) {
 					_task.x = _gantt.positionSnapX(_task.x, 0);
-					var row = _gantt.calculateRowFromY(_task.y, _task.tid);
-					_task.y = row*GANTT_TASK_BLK_HGT;
+					_task.y = _task.row*GANTT_TASK_BLK_HGT;
 					// check move distance
 					if (Math.abs(e.x - x_start) > 3 && Math.abs(e.y - y_start) > 2) {
 						_task.startDate = _task.calculateDateFromX(_task.x);
@@ -459,7 +467,7 @@ Gantt.prototype = {
 							tid: _task.tid,
 							start: _task.startDate.toISOString(),
 							end: _task.endDate.toISOString(),
-							row: row.toString()
+							row: _task.row.toString()
 						});
 					} else {
 						_task.showEditForm(_task, _gantt, e.x, e.y);
@@ -511,6 +519,7 @@ Gantt.prototype = {
 			x_offset = e.x - task.x;
 			y_offset = e.y - task.y;
 			_task = task;
+			_task.row = Math.ceil(_task.y / GANTT_TASK_BLK_HGT);
 			// check if user is clicking on the right edge
 			var span = (_task.weekspan === null) ? _task.dayspan : Math.ceil(_task.weekspan);
 			var diff = Math.abs(e.x - _task.x - _gantt.x - span*GANTT_DAY_BLK_LEN);
@@ -573,6 +582,16 @@ Gantt.prototype = {
 		}
 		return new_x;
 	},
+	positionSnapY: function(y) {
+		// calculate y position by snapping to a row
+		var ry = y + Math.abs(this.y);
+		if ((ry % GANTT_TASK_BLK_HGT) > GANTT_TASK_BLK_HGT/2) {
+			ry += GANTT_TASK_BLK_HGT - (ry % GANTT_TASK_BLK_HGT);
+		} else {
+			ry -= (ry % GANTT_TASK_BLK_HGT);
+		}
+		return Math.ceil(ry / GANTT_TASK_BLK_HGT);
+	},
 	addNewTask: function(x, y) {
 		if (ganttClickLock != 0) return;
 		var _gantt = this;
@@ -585,8 +604,9 @@ Gantt.prototype = {
 			newId = parseInt(last.tid)+1;
 		}
 		newId = newId.toString();
-		var new_y = y + Math.abs(_gantt.y);
-		var row = _gantt.calculateRowFromY(new_y, newId);
+		var row = _gantt.positionSnapY(y);
+		// shift tasks if necessary
+		_gantt.shiftTasksByRow(row, 1, newId, 1);
 		new_y = row*GANTT_TASK_BLK_HGT;
 		var newStartDate = TaskBlock.prototype.calculateDateFromX(new_x).toISOString();
 		var numHours = 24*2;
@@ -962,6 +982,24 @@ Gantt.prototype = {
 			var tblk = gantticc.tasks[i];
 			if (tblk.color == color) {
 				tblk.group_asset.attr({ visible: enable });
+			}
+		}
+	},
+	// @param row: row id
+	// @param dir: 1 for down, -1 for up
+	shiftTasksByRow: function(row, dir, exclude, recursive) {
+		for (var i=0; i<gantticc.tasks.length; i++) {
+			var tblk = gantticc.tasks[i];
+			var trow = Math.ceil(tblk.y/GANTT_TASK_BLK_HGT);
+			if (tblk.tid != exclude && trow == row) {
+				tblk.y = tblk.y+dir*GANTT_TASK_BLK_HGT;
+				tblk.group_asset.attr({ y: tblk.y });
+				var nrow = Math.ceil(tblk.y/GANTT_TASK_BLK_HGT);
+				stage.sendMessage('update_task', {
+					tid: tblk.tid,
+					row: nrow.toString()
+				});
+				if (recursive) this.shiftTasksByRow(row+dir, dir, tblk.tid, recursive);
 			}
 		}
 	}
