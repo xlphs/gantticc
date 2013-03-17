@@ -334,6 +334,7 @@ gantticc.render = function(){
 				ganttClickLock = 0;
 			});
 			stage.on('message:update_project', function(data){
+				if (ganttClickLock > 0) return;
 				if ((typeof data.start_date) != 'undefined'){
 					var scroll_date = new Date();
 					if (data.scroll_date) {
@@ -345,9 +346,11 @@ gantticc.render = function(){
 				}
 			});
 			stage.on('message:init_tasks', function(data){
+				if (ganttClickLock > 0) return;
 				gchart.initTasks(data.tasks);
 			});
 			stage.on('message:init_heatmap', function(data){
+				if (ganttClickLock > 0) return;
 				// preserve current scroll position
 				var scrollDate = gchart.getScrollDate();
 				// check unit
@@ -376,12 +379,16 @@ gantticc.render = function(){
 					var diff = parseInt(task.row)*GANTT_TASK_BLK_HGT - Math.floor(stage.height/2);
 					diff = Math.ceil( diff/GANTT_TASK_BLK_HGT ) * GANTT_TASK_BLK_HGT;
 					gchart.scrollY(diff);
+				} else {
+					// scroll to top
+					gchart.scrollY(gchart.y);
 				}
 			});
 			stage.on('message:set_swatch', function(data){
 				gchart.highlightTaskByColor(data.color, data.status);
 			});
 			stage.on('message:set_scale', function(data){
+				if (ganttClickLock > 0) return;
 				var scrollDate = new Date();
 				if (gchart.unit === data.unit){
 					// jump to today if no change

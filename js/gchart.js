@@ -426,8 +426,8 @@ Gantt.prototype = {
 					_task.edgeDrag_asset.attr({x: _task.width-2});
 				}
 			} else if (moving == 2) {
-				ganttClickCount = 0;
 				if (ganttTouchCount > 1) return;
+				ganttClickLock = 1; // lock for animation to finish
 				var diff_x = x_start - e.x;
 				var diff_y = y_start - e.y;
 				if (Math.abs(diff_x) > Math.abs(diff_y)) {
@@ -509,6 +509,10 @@ Gantt.prototype = {
 					stage.sendMessage('scroll_date', {
 						date: TaskBlock.prototype.calculateDateFromX(-1*_gantt.x+GANTT_UNIT_INDT_LEN)
 					});
+					setTimeout(function() {
+						// unlock after animation is done
+						ganttClickLock = 0;
+					}, 500);
 				}
 			}
 			moving = 0;

@@ -5,6 +5,7 @@ require.config({
 	paths:{
 		'firebase':'https://cdn.firebase.com/v0/firebase'
 	},
+	urlArgs: "bust=b20130316",
 	waitSeconds:10
 });
 require(["jquery", "firebase", "bootstrap.min", "bootstrap-datepicker.min", "bonsai.min", "gantticc.min"],
@@ -132,6 +133,10 @@ function project_new(){
 
 function project_load(pid){
 	gantticc.setCurrentProject(pid);
+	var todaytasks = gantticc.project.getTasksOnDate( new Date() );
+	if (todaytasks.length > 0) {
+		gchart.sendMessage('scroll_to_task',{ task: todaytasks[0] });
+	}
 	gchart.sendMessage('init_tasks',{
 		tasks: gantticc.project.tasks
 	});
