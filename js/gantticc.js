@@ -230,11 +230,6 @@ gantticc.initUI = function(){
 	$(window).on('resize', function(){  
 		gantticc.resized = true;
 	});
-	if ( $(document).width() < 500) {
-		// hide not-so-useful icons for small screen size
-		$('.hideme').each(function(){ $(this).hide(); });
-		$('#topbar-center').removeClass('span4').addClass('span8');
-	}
 };
 
 gantticc.init = function(){
