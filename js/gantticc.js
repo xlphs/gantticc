@@ -160,6 +160,10 @@ Project.prototype = {
 gantticc.initUI = function(){
 	// allocate space for gchart
 	$('#gantt').css('min-height', gantticc.getHeight());
+	$('#gmask').css({
+		'height': gantticc.getHeight(),
+		'top': $('#topbar').height()
+	});
 	// setup date picker
 	$(".datepickr").datepicker();
 	$(".datepickr").on('click', function(e){
@@ -298,7 +302,7 @@ gantticc.init = function(){
 
 gantticc.render = function(){
 	$('#gantt').empty();
-	
+	$('#gmask').show().css('opacity',1);
 	gchart = bonsai.run(document.getElementById('gantt'),{
 		url: 'js/gchart.min.js?bustcache='+Math.random(),
 		width: gantticc.getWidth(),
@@ -342,26 +346,34 @@ gantticc.render = function(){
 			});
 			stage.on('message:init_tasks', function(data){
 				if (ganttClickLock > 0) return;
-				gchart.initTasks(data.tasks);
+				stage.sendMessage('mask_stage',{show:1});
+				setTimeout(function(){
+					gchart.initTasks(data.tasks);
+					stage.sendMessage('mask_stage',{});
+				}, 300);
 			});
 			stage.on('message:init_heatmap', function(data){
 				if (ganttClickLock > 0) return;
-				// preserve current scroll position
-				var scrollDate = gchart.getScrollDate();
-				// check unit
-				if (gchart.unit !== data.unit) {
-					gchart.unit = data.unit;
-				}
-				gchart.drawHeader(data.start_date, data.end_date);
-				gchart.updateCurrentUnit(1);
-				gchart.initHeatMap({
-					min: data.min,
-					max: data.max,
-					projects: data.data
-				});
-				gchart.scrollToDate(scrollDate);
-				// update jump to month button
-				stage.sendMessage('scroll_date', {date: scrollDate});
+				stage.sendMessage('mask_stage',{show:1});
+				setTimeout(function(){
+					// preserve current scroll position
+					var scrollDate = gchart.getScrollDate();
+					// check unit
+					if (gchart.unit !== data.unit) {
+						gchart.unit = data.unit;
+					}
+					gchart.drawHeader(data.start_date, data.end_date);
+					gchart.updateCurrentUnit(1);
+					gchart.initHeatMap({
+						min: data.min,
+						max: data.max,
+						projects: data.data
+					});
+					gchart.scrollToDate(scrollDate);
+					// update jump to month button
+					stage.sendMessage('scroll_date', {date: scrollDate});
+					stage.sendMessage('mask_stage',{});
+				}, 300);
 			});
 			stage.on('message:scroll_to_date', function(data){
 				var date = new Date(data.date);
@@ -384,20 +396,24 @@ gantticc.render = function(){
 			});
 			stage.on('message:set_scale', function(data){
 				if (ganttClickLock > 0) return;
-				var scrollDate = new Date();
-				if (gchart.unit === data.unit){
-					// jump to today if no change
-					gchart.scrollToDate(scrollDate);
-				} else {
-					// preserve current scroll position
-					scrollDate = gchart.getScrollDate();
-					gchart.unit = data.unit;
-					gchart.drawHeader(data.start_date, data.end_date);
-					gchart.updateCurrentUnit(1);
-					gchart.scrollToDate(scrollDate, 1);
-				}
-				// update jump to month button
-				stage.sendMessage('scroll_date', {date: scrollDate});
+				stage.sendMessage('mask_stage',{show:1});
+				setTimeout(function(){
+					var scrollDate = new Date();
+					if (gchart.unit === data.unit){
+						// jump to today if no change
+						gchart.scrollToDate(scrollDate);
+					} else {
+						// preserve current scroll position
+						scrollDate = gchart.getScrollDate();
+						gchart.unit = data.unit;
+						gchart.drawHeader(data.start_date, data.end_date);
+						gchart.updateCurrentUnit(1);
+						gchart.scrollToDate(scrollDate, 1);
+					}
+					// update jump to month button
+					stage.sendMessage('scroll_date', {date: scrollDate});
+					stage.sendMessage('mask_stage',{});
+				}, 300);
 			});
 			stage.sendMessage('ready',{});
 		}
@@ -487,6 +503,13 @@ gantticc.render = function(){
 				to = start;
 			}
 			gchart_scroll(to);
+		});
+		gchart.on('message:mask_stage', function(data){
+			if (data.show) {
+				$('#gmask').show().animate({opacity: 1}, 300);
+			} else {
+				$('#gmask').animate({opacity: 0}, 300, function(){ $('#gmask').hide(); });
+			}
 		});
 	});
 	// apply data into ui
