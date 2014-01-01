@@ -9,10 +9,10 @@ Try it live at [Gantticc](http://gantti.cc/).
 - Gantt chart
 - Heat map
 - Multiple projects
-- Local storage or hosted online at [Firebase](https://www.firebase.com/)
-- Export as CSV
+- Export as CSV (for Google Calendar)
 - Print (chart/agenda)
+- Local storage or hosted online at [Firebase](https://www.firebase.com/)
 
 #### Note
 
-Supports Chrome (24), Firefox (18), Safari (5), Opera (12).
+Supports Chrome (31), Firefox (26), Safari (6), Opera (12).
