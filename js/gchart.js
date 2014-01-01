@@ -252,10 +252,10 @@ TaskBlock.prototype = {
 		var start = new Date(start_date).getTime();
 		var end = new Date(end_date).getTime();
 		var diff = Math.abs(end - start)/1000;
-		if (new Date(start_date).dst()) {
+		if (! (new Date(start_date).dst())) {
 			start += 3600*1000;
 		}
-		if (new Date(end_date).dst()) {
+		if (! (new Date(end_date).dst())) {
 			end += 3600*1000;
 		}
 		// minimum length is 1 day
@@ -846,12 +846,17 @@ Gantt.prototype = {
 			});
 			for (var j=0; j<arr.data.length; j++) {
 				var t = arr.data[j];
+				var date = new Date(t.date);
+				if (!date.dst()) {
+					var tmp = date.getTime();
+					date = new Date(tmp + 1000*3600);
+				}
 				if (t.tasks.length > _gantt.heatmap.min) {
 					// do not render min (for performance)
 					t.count = t.tasks.length.toString();
 					t.y = (i+1)*60;
 					// calculate x coordinate
-					var x_pos = TaskBlock.prototype.calculateXFromDate(new Date(t.date));
+					var x_pos = TaskBlock.prototype.calculateXFromDate(date);
 					var tb = new TaskBlock(_gantt.body, x_pos, t);
 					gantticc.tasks.push(tb);
 				}

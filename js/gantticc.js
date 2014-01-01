@@ -107,20 +107,29 @@ Project.prototype = {
 	getTasksOnDate: function(date){
 		var tasks = [];
 		var d = date.getTime();
-		var dst = new Date(date).dst();
 		
 		for (var i=0; i<this.tasks.length; i++) {
 			var t = this.tasks[i];
 			var start = new Date(t.start).getTime();
 			var end = new Date(t.end).getTime();
-			if (new Date(t.start).dst()) {
+			if (! (new Date(t.start).dst())) {
 				start += 1000*3600;
 			}
-			if (new Date(t.end).dst()) {
+			if (! (new Date(t.end).dst())) {
 				end += 1000*3600;
 			}
 			if (start <= d && end >= d) {
 				tasks.push($.extend(true, {}, t)); // return copy
+			} else {
+				// Google Chrome handles timezone differently from Firefox/Safari,
+				// so as a last resort, compare YYYY-MM-DD
+				var startDate = new Date(t.start);
+				if (date.getFullYear() == startDate.getFullYear()
+					&& date.getMonth() == startDate.getMonth()
+					&& date.getDate() == startDate.getDate()
+				) {
+					tasks.push($.extend(true, {}, t)); // return copy
+				}
 			}
 		}
 		return tasks;
@@ -146,6 +155,10 @@ Project.prototype = {
 		for (var t=start; t<=end; t+=incTime) {
 			var tasks;
 			var date = new Date(t);
+			if (!date.dst()) {
+				var tmp = date.getTime();
+				date = new Date(tmp + 1000*3600);
+			}
 			if (unit === "day") {
 				tasks = this.getTasksOnDate(date);
 			} else {

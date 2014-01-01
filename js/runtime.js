@@ -5,7 +5,7 @@ require.config({
 	paths:{
 		'firebase':'https://cdn.firebase.com/v0/firebase'
 	},
-	urlArgs: "bust=b20130328",
+	urlArgs: "bust=b20140101",
 	waitSeconds:10
 });
 require(["jquery", "firebase", "bootstrap.min", "bootstrap-datepicker.min", "bonsai.min", "gantticc.min"],
@@ -271,6 +271,10 @@ function project_heatmap(unit, update){
 	for (var t=start; t<=end; t+=incTime) {
 		var tasks;
 		var date = new Date(t);
+		if (!date.dst()) {
+			var tmp = date.getTime();
+			date = new Date(tmp + 1000*3600);
+		}
 		if (unit === "day") {
 			tasks = gantticc.getAllTasksOnDate(date);
 		} else {
@@ -327,4 +331,13 @@ function gchart_print() {
 	svgContents = svgContents.replace(viewBox, newViewBox);
 	$('#printwrap').html(svgContents);
 	window.print();
+}
+
+Date.prototype.stdTimezoneOffset = function() {
+    var jan = new Date(this.getFullYear(), 0, 1);
+    var jul = new Date(this.getFullYear(), 6, 1);
+    return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+}
+Date.prototype.dst = function() {
+    return this.getTimezoneOffset() < this.stdTimezoneOffset();
 }
