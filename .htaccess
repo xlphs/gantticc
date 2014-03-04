@@ -1,6 +1,3 @@
-# quick fix for moving test.html to app.html
-redirect 301 /test.html http://gantti.cc/app
-
 RewriteEngine on
 
 # Hide .html extension
