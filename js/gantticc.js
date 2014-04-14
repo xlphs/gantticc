@@ -571,7 +571,8 @@ gantticc.youShallNotPass = function(submit){
 			gantticc.render();
 			gantticc.listenKey = true; // enable hostkeys
 			if ( $('#passcodermbr').prop('checked') ) {
-				gantticc.setCookie(gantticc.firebaseId, gantticc.firebasePasscode);
+				// remember logged in status for 10 days
+				gantticc.setCookie(gantticc.firebaseId, gantticc.firebasePasscode, 10);
 			}
 		}
 	} else {
