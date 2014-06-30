@@ -6,6 +6,7 @@ var GANTT_TASK_BLK_HGT = 30;
 var GANTT_UNIT_INDT_LEN = 43;
 // length of task detail popup (in px)
 var TASK_POPUP_LEN = 250;
+var DRAG_INDICATOR_LEN = 17;
 // detect iPhone and iPad
 var IOS_USER = false;
 if ( (navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPad/i)) ) {
@@ -107,6 +108,7 @@ function TaskBlock(context, x, task) {
 		}
 	}
 	this.color = (task.color) ? task.color : "gray";
+	this.dragging = false;
 	this.show(context);
 }
 
@@ -163,7 +165,7 @@ TaskBlock.prototype = {
 			_task.bg_asset.animate('0.2s', {
 				fillColor: color.parse(c)
 			});
-			_task.edgeDrag_asset.attr({opacity: 0});
+			if (!_task.dragging) _task.edgeDrag_asset.attr({opacity: 0});
 		})
 		.on('pointerdown', function(e){
 			stage.emit('taskpointerdown', _task, e);
@@ -190,11 +192,14 @@ TaskBlock.prototype = {
 		});
 		
 		_task.edgeDrag_asset = new Group().attr({
-			x: _task.width-3, y: 0, opacity: 0
+			x: _task.width, y: 0, opacity: 0
 		}).addTo(group);
-		var edgeLine = new Rect(0, 0, 3, GANTT_TASK_BLK_HGT)
+		var edgeLine = new Polygon(8, GANTT_TASK_BLK_HGT/2, DRAG_INDICATOR_LEN, 3)
 			.attr({
-				filters: filter.blur(0)
+				origin: 0,
+				filters: filter.blur(0),
+				rotation: -0.5,
+				scaleX: 0.5
 			})
 		.fill( color.parse("rgba(0,0,0,0.5)") )
 		.addTo(_task.edgeDrag_asset);
@@ -284,7 +289,7 @@ TaskBlock.prototype = {
 			this.width = this.dayspan*GANTT_DAY_BLK_LEN;
 		}
 		this.bg_asset.attr({ width: this.width });
-		if (!this.count) this.edgeDrag_asset.attr({ x: this.width-2 });
+		if (!this.count) this.edgeDrag_asset.attr({ x: this.width });
 	},
 	calculateDateFromX: function(x_pos) {
 		// look at only the x position
@@ -423,7 +428,8 @@ Gantt.prototype = {
 					// cannot make task less than 1 unit length
 					if (_task.width <= GANTT_DAY_BLK_LEN) _task.width = GANTT_DAY_BLK_LEN;
 					_task.bg_asset.attr('width', _task.width);
-					_task.edgeDrag_asset.attr({x: _task.width-2});
+					_task.edgeDrag_asset.attr({x: _task.width});
+					_task.dragging = true;
 				}
 			} else if (moving == 2) {
 				if (ganttTouchCount > 1) return;
@@ -497,7 +503,8 @@ Gantt.prototype = {
 						tid: _task.tid,
 						end: _task.endDate.toISOString()
 					});
-					_task.edgeDrag_asset.attr({x: _task.width-2, opacity: 0});
+					_task.edgeDrag_asset.attr({x: _task.width, opacity: 0});
+					_task.dragging = false;
 				}
 				mode = 0;
 				_task = null;
@@ -526,8 +533,8 @@ Gantt.prototype = {
 			_task.row = Math.ceil(_task.y / GANTT_TASK_BLK_HGT);
 			// check if user is clicking on the right edge
 			var span = (_task.weekspan === null) ? _task.dayspan : Math.ceil(_task.weekspan);
-			var diff = Math.abs(e.x - _task.x - _gantt.x - span*GANTT_DAY_BLK_LEN);
-			if (diff < 7) {
+			var diff = e.x - _task.x - _gantt.x - span*GANTT_DAY_BLK_LEN;
+			if (diff > -5 && diff < DRAG_INDICATOR_LEN) {
 				mode = 2;
 			} else {
 				mode = 0;

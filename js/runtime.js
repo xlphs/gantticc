@@ -5,7 +5,7 @@ require.config({
 	paths:{
 		'firebase':'https://cdn.firebase.com/js/client/1.0.11/firebase'
 	},
-	urlArgs: "bust=b20140414",
+	urlArgs: "bust=b20140630",
 	waitSeconds:10
 });
 require(["jquery", "firebase", "bootstrap.min", "bootstrap-datepicker.min", "bonsai.min", "gantticc.min"],
