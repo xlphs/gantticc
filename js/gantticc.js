@@ -269,7 +269,7 @@ gantticc.init = function(){
 	gantticc.firebaseUrl = "https://gantticc.firebaseio.com/";
 	gantticc.firebasePasscode = "";
 	gantticc.passcodeAttempts = 0;
-	gantticc.siteUrl = "http://gantti.cc/app";
+	gantticc.siteUrl = "http://mmw.cx/g/app";
 	
 	// Check support for Local Storage
 	gantticc.localstorage = 1;
