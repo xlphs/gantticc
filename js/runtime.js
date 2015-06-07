@@ -5,10 +5,10 @@ require.config({
 	paths:{
 		'firebase':'https://cdn.firebase.com/js/client/1.0.11/firebase'
 	},
-	urlArgs: "bust=b20150307",
+	urlArgs: "bust=b20150607",
 	waitSeconds:10
 });
-require(["jquery", "firebase", "bootstrap.min", "bootstrap-datepicker.min", "bonsai.min", "gantticc.min"],
+require(["jquery", "bootstrap.min", "bootstrap-datepicker.min", "bonsai.min", "gantticc.min"],
 function($){
 	// ---- Entry point ----
 	gantticc.initUI();
@@ -16,7 +16,6 @@ function($){
 },
 function(err){
 	// error callback
-	// TODO: fallback to localstorage if firebase script failed to load
 	var gantt = document.getElementById("gantt");
 	gantt.innerHTML = "Error occurred while loading required scripts, please try again later.";
 });
