@@ -2,7 +2,7 @@
 
 This is a minimalistic gantt chart web app. Rendered with [bonsai](http://bonsaijs.org/) library.
 
-[Try it now!](http://mmw.cx/g/app)
+[Try it now!](https://mw.gl/g/app)
 
 ![](http://miphol.com/muse/gantticc.png)
 
